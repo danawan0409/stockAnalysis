@@ -1,0 +1,113 @@
+CREATE TABLE "User" (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password TEXT NOT NULL
+);
+
+CREATE TABLE Portfolio (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(50) NOT NULL,
+    cashAccount NUMERIC(15, 2) DEFAULT 0,
+    ownerID INTEGER NOT NULL,
+    FOREIGN KEY (ownerID) REFERENCES "User"(id)
+);
+
+CREATE TABLE StockList (
+    id SERIAL PRIMARY KEY,
+    visibility BOOLEAN DEFAULT TRUE, -- TRUE = public, FALSE = private
+    name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE Stock (
+    symbol VARCHAR(10) PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE StockHistory (
+    symbol VARCHAR(10),
+    timestamp DATE,
+    open NUMERIC(10, 2),
+    close NUMERIC(10, 2),
+    high NUMERIC(10, 2),
+    low NUMERIC(10, 2),
+    volume BIGINT,
+    PRIMARY KEY (symbol, timestamp),
+    FOREIGN KEY (symbol) REFERENCES Stock(symbol)
+);
+
+COPY StockHistory(
+    timestamp, 
+    open, 
+    high,
+    low, 
+    close, 
+    volume, 
+    symbol) FROM '/data/SP500History.csv' DELIMITER ','
+CSV HEADER;
+
+
+CREATE TABLE Review (
+    ownerID INTEGER,
+    writerID INTEGER,
+    stockListID INTEGER,
+    content TEXT,
+    PRIMARY KEY (ownerID, writerID, stockListID),
+    FOREIGN KEY (ownerID) REFERENCES "User"(id),
+    FOREIGN KEY (writerID) REFERENCES "User"(id),
+    FOREIGN KEY (stockListID) REFERENCES StockList(id)
+);
+
+CREATE TABLE Friends (
+    senderID INTEGER,
+    receiverID INTEGER,
+    accepted BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (senderID, receiverID),
+    FOREIGN KEY (senderID) REFERENCES "User"(id),
+    FOREIGN KEY (receiverID) REFERENCES "User"(id)
+);
+
+CREATE TABLE HasStockList (
+    ownerID INTEGER,
+    stockListID INTEGER,
+    PRIMARY KEY (ownerID, stockListID),
+    FOREIGN KEY (ownerID) REFERENCES "User"(id),
+    FOREIGN KEY (stockListID) REFERENCES StockList(id)
+);
+
+CREATE TABLE HasPortfolio (
+    ownerID INTEGER,
+    portfolioID INTEGER,
+    PRIMARY KEY (ownerID, portfolioID),
+    FOREIGN KEY (ownerID) REFERENCES "User"(id),
+    FOREIGN KEY (portfolioID) REFERENCES Portfolio(id)
+);
+
+CREATE TABLE ShareStockList (
+    ownerID INTEGER,
+    receiverID INTEGER,
+    stockListID INTEGER,
+    PRIMARY KEY (ownerID, receiverID, stockListID),
+    FOREIGN KEY (ownerID) REFERENCES "User"(id),
+    FOREIGN KEY (receiverID) REFERENCES "User"(id),
+    FOREIGN KEY (stockListID) REFERENCES StockList(id)
+);
+
+CREATE TABLE StockListHasStock (
+    stockListID INTEGER,
+    stockID VARCHAR(10),
+    PRIMARY KEY (stockListID, stockID),
+    FOREIGN KEY (stockListID) REFERENCES StockList(id),
+    FOREIGN KEY (stockID) REFERENCES Stock(symbol)
+);
+
+CREATE TABLE PortfolioHasStock (
+    portfolioID INTEGER,
+    stockID VARCHAR(10),
+    purchaseDate DATE,
+    purchasePrice NUMERIC(10, 2),
+    quantity INTEGER,
+    sold BOOLEAN DEFAULT FALSE,
+    PRIMARY KEY (portfolioID, stockID, purchaseDate),
+    FOREIGN KEY (portfolioID) REFERENCES Portfolio(id),
+    FOREIGN KEY (stockID) REFERENCES Stock(symbol)
+);
