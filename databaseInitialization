@@ -111,3 +111,26 @@ CREATE TABLE PortfolioHasStock (
     FOREIGN KEY (portfolioID) REFERENCES Portfolio(id),
     FOREIGN KEY (stockID) REFERENCES Stock(symbol)
 );
+
+CREATE OR REPLACE FUNCTION check_friendship()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM Friends
+        WHERE
+            accepted = TRUE AND (
+                (senderID = NEW.ownerID AND receiverID = NEW.receiverID) OR
+                (senderID = NEW.receiverID AND receiverID = NEW.ownerID)
+            )
+    ) THEN
+        RAISE EXCEPTION 'Users % and % are not friends.', NEW.ownerID, NEW.receiverID;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_check_friendship
+BEFORE INSERT OR UPDATE ON ShareStockList
+FOR EACH ROW
+EXECUTE FUNCTION check_friendship();
