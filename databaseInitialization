@@ -43,7 +43,7 @@ COPY StockHistory(
     low, 
     close, 
     volume, 
-    symbol) FROM '/data/SP500History.csv' DELIMITER ','
+    symbol) FROM 'C:\Users\yoson\Downloads\SP500History.csv' DELIMITER ','
 CSV HEADER;
 
 
@@ -62,16 +62,13 @@ CREATE TABLE Review (
 CREATE TABLE Friends (
     senderID INTEGER,
     receiverID INTEGER,
-    accepted BOOLEAN DEFAULT FALSE,
+    state VARCHAR(10) DEFAULT 'pending' CHECK (state IN ('pending', 'accepted', 'rejected', 'deleted')),
     requestTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (senderID, receiverID),
     FOREIGN KEY (senderID) REFERENCES "User"(id) ON DELETE CASCADE,
     FOREIGN KEY (receiverID) REFERENCES "User"(id) ON DELETE CASCADE
 );
-
-/* I remove HasStockList and HasPortfolio Tables because the owner can be very easily found
-   (i.e., ownerId is stored in StockList and Portfolio).
-   Maybe redundant? */
 
 CREATE TABLE ShareStockList (
     ownerID INTEGER,
