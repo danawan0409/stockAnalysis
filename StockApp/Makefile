@@ -1,50 +1,40 @@
 #
-# Compiler
-#
+# Compiler and flags
 #
 CXX = g++
+CXXFLAGS = -std=c++17 -Wall -O2 -Iinclude
 
 #
-# Compiler flags
+# Libraries
 #
-#
-CXXFLAGS = -std=c++11 -Wall -O3
-
-#
-# Include and library directories
-#
-#
-INCLUDES = -I/usr/include/pqxx
 LIBS = -lpqxx -lpq
 
 #
-# Source files
+# Source files and build output
 #
-#
-SRCS = pgsample.cpp
-
-#
-# Output executable
-#
-#
-TARGET = pgsample
+SRCS = $(wildcard src/*.cpp)
+OBJS = $(SRCS:.cpp=.o)
+TARGET = stockapp
 
 #
 # Default target
 #
-#
 all: $(TARGET)
 
 #
-# Rule to build the target executable
+# Link all object files to build final executable
 #
-#
-$(TARGET): $(SRCS)
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -o $(TARGET) $(SRCS) $(LIBS)
+$(TARGET): $(OBJS)
+	$(CXX) -o $@ $^ $(LIBS)
 
 #
-# Clean rule to remove the compiled executable
+# Compile .cpp files to .o files
 #
+src/%.o: src/%.cpp
+	$(CXX) $(CXXFLAGS) -c $< -o $@
+
+#
+# Clean build
 #
 clean:
-	rm -f $(TARGET)
+	rm -f $(TARGET) src/*.o

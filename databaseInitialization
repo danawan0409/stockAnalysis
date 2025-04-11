@@ -5,18 +5,18 @@ CREATE TABLE "User" (
 );
 
 CREATE TABLE Portfolio (
-    id SERIAL PRIMARY KEY,
     name VARCHAR(50) NOT NULL,
     cashAccount NUMERIC(15, 2) DEFAULT 0,
     ownerID INTEGER NOT NULL,
+    PRIMARY KEY (name, ownerID),
     FOREIGN KEY (ownerID) REFERENCES "User"(id) ON DELETE CASCADE
 );
 
 CREATE TABLE StockList (
-    id SERIAL PRIMARY KEY,
     visibility VARCHAR(10) CHECK (visibility IN ('public', 'shared', 'private')) DEFAULT 'private',
     name VARCHAR(100) NOT NULL,
     ownerID INTEGER NOT NULL,
+    PRIMARY KEY (name, ownerID),
     FOREIGN KEY (ownerID) REFERENCES "User"(id) ON DELETE CASCADE
 );
 
@@ -50,13 +50,14 @@ CSV HEADER;
 
 CREATE TABLE Review (
     writerID INTEGER,
-    stockListID INTEGER,
+    ownerID INTEGER, 
+    stockListName VARCHAR(100) NOT NULL,
     content TEXT CHECK (char_length(content) <= 4000),
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (writerID, stockListID),
+    PRIMARY KEY (writerID, ownerID, stockListName),
     FOREIGN KEY (writerID) REFERENCES "User"(id) ON DELETE CASCADE,
-    FOREIGN KEY (stockListID) REFERENCES StockList(id) ON DELETE CASCADE
+    FOREIGN KEY (stockListName, ownerID) REFERENCES StockList(name, ownerID) ON DELETE CASCADE
 );
 
 CREATE TABLE Friends (
@@ -76,24 +77,25 @@ CREATE TABLE Friends (
 CREATE TABLE ShareStockList (
     ownerID INTEGER,
     receiverID INTEGER,
-    stockListID INTEGER,
-    PRIMARY KEY (ownerID, receiverID, stockListID),
-    FOREIGN KEY (ownerID) REFERENCES "User"(id) ON DELETE CASCADE,
-    FOREIGN KEY (receiverID) REFERENCES "User"(id) ON DELETE CASCADE,
-    FOREIGN KEY (stockListID) REFERENCES StockList(id) ON DELETE CASCADE
+    stockListName VARCHAR(100) NOT NULL,
+    PRIMARY KEY (ownerID, receiverID, stockListName),
+    FOREIGN KEY (stockListName, ownerID) REFERENCES StockList(name, ownerID) ON DELETE CASCADE,
+    FOREIGN KEY (receiverID) REFERENCES "User"(id) ON DELETE CASCADE
 );
 
 CREATE TABLE StockListHasStock (
-    stockListID INTEGER,
+    ownerID INTEGER,
+    stockListName VARCHAR(100) NOT NULL,
     stockID VARCHAR(10),
     quantity INTEGER NOT NULL,
-    PRIMARY KEY (stockListID, stockID),
-    FOREIGN KEY (stockListID) REFERENCES StockList(id) ON DELETE CASCADE,
+    PRIMARY KEY (stockListName, ownerID, stockID),
+    FOREIGN KEY (stockListName, ownerID) REFERENCES StockList(name, ownerID) ON DELETE CASCADE,
     FOREIGN KEY (stockID) REFERENCES Stock(symbol) ON DELETE CASCADE
 );
 
 CREATE TABLE PortfolioHasStock (
-    portfolioID INTEGER,
+    portfolioName VARCHAR(50) NOT NULL,
+    ownerID INTEGER NOT NULL,
     stockID VARCHAR(10),
     purchaseDate DATE,
     purchasePrice NUMERIC(10, 2),
@@ -101,8 +103,8 @@ CREATE TABLE PortfolioHasStock (
     sold BOOLEAN DEFAULT FALSE,
     sellDate DATE,
     sellPrice NUMERIC(10, 2),
-    PRIMARY KEY (portfolioID, stockID, purchaseDate),
-    FOREIGN KEY (portfolioID) REFERENCES Portfolio(id) ON DELETE CASCADE,
+    PRIMARY KEY (portfolioName, ownerID, stockID, purchaseDate),
+    FOREIGN KEY (portfolioName, ownerID) REFERENCES Portfolio(name, ownerID) ON DELETE CASCADE,
     FOREIGN KEY (stockID) REFERENCES Stock(symbol) ON DELETE CASCADE
 );
 
