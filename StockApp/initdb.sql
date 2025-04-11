@@ -143,3 +143,9 @@ CREATE TRIGGER trg_check_friendship
 BEFORE INSERT OR UPDATE ON ShareStockList
 FOR EACH ROW
 EXECUTE FUNCTION check_friendship();
+
+-- Insert initial data into the Stock table
+INSERT INTO Stock(symbol)
+SELECT DISTINCT symbol
+FROM StockHistory
+WHERE symbol NOT IN (SELECT symbol FROM Stock);
