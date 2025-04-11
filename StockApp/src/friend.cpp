@@ -32,13 +32,9 @@ void sendFriendRequest(int userID) {
             "OR (senderID = " + W.quote(receiverID) + " AND receiverID = " + W.quote(userID) + ") "
             "AND state IN ('rejected', 'deleted');"
         );
-        if (timeCheck[0][0].as<double>() > 300) {  // 300 seconds = 5 minutes
-            std::string lastUpdated = timeCheck[0]["updatedTime"].as<std::string>();
-            // Compare the time difference to 5 minutes (assuming 'updatedTime' is in timestamp format)
-            pqxx::result timeDiffCheck = W.exec(
-                "SELECT CURRENT_TIMESTAMP - TIMESTAMP '" + W.quote(lastUpdated) + "' AS diff;"
-            );
-            if (!timeDiffCheck.empty()) {
+        if (!timeCheck.empty()) {
+            // If time difference is greater than 5 minutes, update request status
+            if (timeCheck[0][0].as<double>() > 300) {
                 std::string query = "UPDATE Friends "
                                     "SET state = 'pending', "
                                     "senderID = " + W.quote(userID) + ", "
@@ -53,8 +49,8 @@ void sendFriendRequest(int userID) {
                 W.commit();
                 std::cout << "Friend request re-sent to '" << receiverUsername << "'.\n";
             } else {
+                // If time is less than 5 minutes, show the constraint message
                 std::cout << "You can only send a new friend request after 5 minutes from rejection or deletion.\n";
-                return;
             }
         } else {
             // Step 3: If no previous request exists, insert a new one
