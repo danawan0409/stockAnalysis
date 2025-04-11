@@ -33,8 +33,7 @@ CREATE TABLE StockHistory (
     high NUMERIC(10, 2),
     low NUMERIC(10, 2),
     volume BIGINT,
-    PRIMARY KEY (symbol, timestamp),
-    FOREIGN KEY (symbol) REFERENCES Stock(symbol) ON DELETE CASCADE
+    PRIMARY KEY (symbol, timestamp)
 );
 
 COPY StockHistory(
