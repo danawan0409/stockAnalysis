@@ -10,7 +10,7 @@ void registerUser() {
     std::cin >> password;
 
     try {
-        pqxx::connection C("dbname=cppdb user=postgres password=123 hostaddr=127.0.0.1 port=5432");
+        pqxx::connection C("dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432");
         pqxx::work W(C);
 
         std::string query = "INSERT INTO \"User\" (username, password) VALUES (" +
