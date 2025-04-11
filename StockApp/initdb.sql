@@ -31,7 +31,7 @@ CREATE TABLE StockList (
 );
 
 CREATE TABLE Stock (
-    symbol VARCHAR(10) PRIMARY KEY,
+    symbol VARCHAR(10) PRIMARY KEY
 );
 
 CREATE TABLE StockHistory (
