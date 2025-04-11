@@ -7,7 +7,7 @@ int main() {
         // Connect to the database
 	//
 	//
-        pqxx::connection C("dbname=mydb user=postgres password=postgres hostaddr=127.0.0.1 port=5432");
+        pqxx::connection C("dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432");
         if (C.is_open()) {
             std::cout << "Opened database successfully: " << C.dbname() << std::endl;
         } else {
