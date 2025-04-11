@@ -95,7 +95,7 @@ void viewIncomingFriendRequests(int userID){
 
 void viewOutgoingFriendRequests(int userID){
     try {
-        pqxx::connection C("your_connection_string_here");
+        pqxx::connection C(connect_info);
         pqxx::work W(C);
 
         pqxx::result R = W.exec(
@@ -156,7 +156,7 @@ void acceptFriendRequest(int userID){
     std::cin >> senderUsername;
 
     try {
-        pqxx::connection C("your_connection_string_here");
+        pqxx::connection C(connect_info);
         pqxx::work W(C);
 
         // Step 1: Get senderID from username
@@ -204,7 +204,7 @@ void rejectFriendRequest(int userID) {
     std::cin >> senderUsername;
 
     try {
-        pqxx::connection C("your_connection_string_here");
+        pqxx::connection C(connect_info);
         pqxx::work W(C);
 
         // Step 1: Get senderID from username
@@ -254,7 +254,7 @@ void deleteFriend(int userID) {
     std::cin >> friendUsername;
 
     try {
-        pqxx::connection C("your_connection_string_here");
+        pqxx::connection C(connect_info);
         pqxx::work W(C);
 
         // Step 1: Get the friend's user ID from their username
