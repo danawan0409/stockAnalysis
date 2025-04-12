@@ -10,6 +10,23 @@
 
 using json = nlohmann::json;
 
+bool hasAccessToStockList(pqxx::work& W, const std::string& user, const std::string& owner, const std::string& listName) {
+    std::string accessQuery = R"(
+        SELECT 1 FROM StockList S
+        LEFT JOIN ShareStockList SS ON S.name = SS.stockListName AND S.ownerUsername = SS.ownerUsername
+        WHERE S.name = )" + W.quote(listName) + " AND S.ownerUsername = " + W.quote(owner) + R"(
+        AND (
+            S.ownerUsername = )" + W.quote(user) + R"( OR
+            SS.receiverUsername = )" + W.quote(user) + R"( OR
+            S.visibility = 'public'
+        )
+        LIMIT 1;
+    )";
+
+    pqxx::result res = W.exec(accessQuery);
+    return !res.empty();
+}
+
 void findStatistic(const std::string& statName) {
     std::string choice;
     std::cout << "Do you want to find the " << statName << " of a stock in a (1) Portfolio or (2) StockList? ";
@@ -51,13 +68,19 @@ void findStatistic(const std::string& statName) {
 
             valid = true;
         } else if (choice == "2") {
-            std::string owner;
+            std::string owner, name, symbol;
+            valid = false;
+
             std::cout << "Enter the owner of the stock list: ";
             std::cin >> owner;
             std::cout << "Enter the name of the stock list: ";
             std::cin.ignore();
             std::getline(std::cin, name);
 
+            pqxx::connection C(connect_info);
+            pqxx::work W(C);
+
+            // Check if the stock list exists
             pqxx::result res = W.exec(
                 "SELECT 1 FROM StockList WHERE name = " + W.quote(name) +
                 " AND ownerUsername = " + W.quote(owner) + ";"
@@ -67,15 +90,8 @@ void findStatistic(const std::string& statName) {
                 return;
             }
 
-            pqxx::result access = W.exec(
-                "SELECT 1 FROM StockList WHERE name = " + W.quote(name) +
-                " AND ownerUsername = " + W.quote(owner) +
-                " AND (visibility = 'public' OR ownerUsername = " + W.quote(currentUsername) +
-                " OR EXISTS (SELECT 1 FROM ShareStockList WHERE ownerUsername = " + W.quote(owner) +
-                " AND receiverUsername = " + W.quote(currentUsername) +
-                " AND stockListName = " + W.quote(name) + "));"
-            );
-            if (access.empty()) {
+            // Use the helper function to check access
+            if (!hasAccessToStockList(W, currentUsername, owner, name)) {
                 std::cout << "You do not have access to this stock list.\n";
                 return;
             }
@@ -83,6 +99,7 @@ void findStatistic(const std::string& statName) {
             std::cout << "Enter the stock symbol: ";
             std::cin >> symbol;
 
+            // Check if the stock is in the stock list
             pqxx::result inList = W.exec(
                 "SELECT 1 FROM StockListHasStock WHERE stockListName = " + W.quote(name) +
                 " AND ownerUsername = " + W.quote(owner) +
@@ -94,6 +111,7 @@ void findStatistic(const std::string& statName) {
             }
 
             valid = true;
+
         } else {
             std::cout << "Invalid choice.\n";
             return;
@@ -118,10 +136,21 @@ void findStatistic(const std::string& statName) {
 
             } else if (intervalChoice == "2") {
                 std::string start, end;
+                std::regex dateRegex(R"(\d{4}-\d{2}-\d{2})");
+                
                 std::cout << "Enter start date (YYYY-MM-DD): ";
                 std::cin >> start;
+                if (!std::regex_match(start, dateRegex)) {
+                    std::cout << "Invalid start date format.\n";
+                    return;
+                }
+                
                 std::cout << "Enter end date (YYYY-MM-DD): ";
                 std::cin >> end;
+                if (!std::regex_match(end, dateRegex)) {
+                    std::cout << "Invalid end date format.\n";
+                    return;
+                }
 
                 std::string query = R"(
                     WITH prices AS (
@@ -177,23 +206,6 @@ void findVariation() {
 
 void findBeta() {
     findStatistic("beta");
-}
-
-bool hasAccessToStockList(pqxx::work& W, const std::string& user, const std::string& owner, const std::string& listName) {
-    std::string accessQuery = R"(
-        SELECT 1 FROM StockList S
-        LEFT JOIN ShareStockList SS ON S.name = SS.stockListName AND S.ownerUsername = SS.ownerUsername
-        WHERE S.name = )" + W.quote(listName) + " AND S.ownerUsername = " + W.quote(owner) + R"(
-        AND (
-            S.ownerUsername = )" + W.quote(user) + R"( OR
-            SS.receiverUsername = )" + W.quote(user) + R"( OR
-            S.visibility = 'public'
-        )
-        LIMIT 1;
-    )";
-
-    pqxx::result res = W.exec(accessQuery);
-    return !res.empty();
 }
 
 void printMatrix(const std::vector<std::string>& symbols, const std::map<std::string, std::map<std::string, double>>& matrix) {
@@ -268,10 +280,21 @@ void findMatrix(const std::string& matrixType) {
         std::cout << "Use default interval (all data)? (1 for yes, 2 for no): ";
         std::cin >> useDefault;
         if (useDefault == 2) {
+            std::regex dateRegex(R"(\d{4}-\d{2}-\d{2})");
+
             std::cout << "Enter start date (YYYY-MM-DD): ";
             std::cin >> startDate;
+            if (!std::regex_match(startDate, dateRegex)) {
+                std::cout << "Invalid start date format.\n";
+                return;
+            }
+
             std::cout << "Enter end date (YYYY-MM-DD): ";
             std::cin >> endDate;
+            if (!std::regex_match(endDate, dateRegex)) {
+                std::cout << "Invalid end date format.\n";
+                return;
+            }
         }
 
         // Compute matrix directly from returns
