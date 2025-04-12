@@ -3,7 +3,6 @@ DROP TABLE IF EXISTS Review CASCADE;
 DROP TABLE IF EXISTS Friends CASCADE;
 DROP TABLE IF EXISTS PortfolioHasStock CASCADE;
 DROP TABLE IF EXISTS StockListHasStock CASCADE;
-DROP TABLE IF EXISTS PredictStockPrice CASCADE;
 DROP TABLE IF EXISTS Portfolio CASCADE;
 DROP TABLE IF EXISTS StockList CASCADE;
 DROP TABLE IF EXISTS Stock CASCADE;
@@ -114,7 +113,7 @@ BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM Friends
         WHERE
-            accepted = TRUE AND (
+            state = 'accepted' AND (
                 (senderUsername = NEW.ownerUsername AND receiverUsername = NEW.receiverUsername) OR
                 (senderUsername = NEW.receiverUsername AND receiverUsername = NEW.ownerUsername)
             )
@@ -200,6 +199,7 @@ CREATE TABLE CachedMatrix (
     covariance NUMERIC(15, 6),
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (symbol1, symbol2)
+    CHECK (symbol1 < symbol2) -- Ensure unique pairs
 );
 
 
