@@ -65,10 +65,10 @@ std::vector<std::pair<std::string, double>> predictFuturePrices(
     const std::vector<std::pair<std::string, double>>& historical, int predictDays = 14, int windowSize = 5) {
     
     std::vector<std::pair<std::string, double>> predictions;
-    if (historical.size() < windowSize) return predictions;
+    if (historical.size() < static_cast<size_t>(windowSize)) return predictions;
 
     std::vector<double> recentPrices;
-    for (int i = historical.size() - windowSize; i < historical.size(); ++i) {
+    for (size_t i = historical.size() - static_cast<size_t>(windowSize); i < historical.size(); ++i) {
         recentPrices.push_back(historical[i].second);
     }
 
