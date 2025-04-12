@@ -2,8 +2,6 @@
 #include <pqxx/pqxx>
 #include "user.h"
 
-std::string connect_info = "dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432";
-
 void sendFriendRequest(const std::string& senderUsername) {
     std::string receiverUsername;
     std::cout << "Enter the username of the user you want to request: ";

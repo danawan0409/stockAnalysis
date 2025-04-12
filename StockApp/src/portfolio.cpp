@@ -21,7 +21,7 @@ void createPortfolio(const std::string& ownerUsername) {
     }
 
     try {
-        pqxx::connection C("dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432");
+        pqxx::connection C(connect_info);
         pqxx::work W(C);
 
         // check if portfolio name already exists for the user
@@ -51,7 +51,7 @@ void createPortfolio(const std::string& ownerUsername) {
 
 void viewPortfolios(const std::string& ownerUsername) {
     try {
-        pqxx::connection C("dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432");
+        pqxx::connection C(connect_info);
         pqxx::nontransaction N(C);
 
         std::string query =
@@ -115,7 +115,7 @@ void viewPortfolios(const std::string& ownerUsername) {
 
 void deletePortfolio(const std::string& ownerUsername) {
     try {
-        pqxx::connection C("dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432");
+        pqxx::connection C(connect_info);
         pqxx::work W(C);
 
         // get all portfolios for the user
@@ -179,7 +179,7 @@ std::vector<std::pair<std::string, double>> listUserPortfolios(const std::string
     std::vector<std::pair<std::string, double>> portfolios;
 
     try {
-        pqxx::connection C("dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432");
+        pqxx::connection C(connect_info);
         pqxx::nontransaction N(C);
 
         std::string query =
@@ -235,7 +235,7 @@ void depositCash(const std::string& ownerUsername) {
     }
 
     try {
-        pqxx::connection C("dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432");
+        pqxx::connection C(connect_info);
         pqxx::work W(C);
 
         if (sourceType == 1) {
@@ -329,7 +329,7 @@ void withdrawCash(const std::string& ownerUsername) {
     }
 
     try {
-        pqxx::connection C("dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432");
+        pqxx::connection C(connect_info);
         pqxx::work W(C);
 
         std::string update =
@@ -366,7 +366,7 @@ void buyStock(const std::string& ownerUsername) {
     std::cin >> stockSymbol;
 
     try {
-        pqxx::connection C("dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432");
+        pqxx::connection C(connect_info);
         pqxx::work W(C);
 
         // search for stock close price
@@ -436,7 +436,7 @@ void sellStock(const std::string& ownerUsername) {
     std::string portfolioName = portfolios[choice - 1].first;
 
     try {
-        pqxx::connection C("dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432");
+        pqxx::connection C(connect_info);
         pqxx::work W(C);
 
         std::string holdingQuery =

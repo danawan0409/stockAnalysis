@@ -5,8 +5,6 @@
 #include "friend.h"
 #include "stocklist.h"
 
-std::string connect_info = "dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432";
-
 void friendMenu();
 void stockListMenu();
 
@@ -23,14 +21,9 @@ int main() {
         std::cout << "3. Exit\n";
 
         if (!currentUsername.empty()) {
-            std::cout << "4. Create Portfolio\n";
-            std::cout << "5. View My Portfolios\n";
-            std::cout << "6. Delete Portfolio\n";
-            std::cout << "7. Deposit Cash\n";
-            std::cout << "8. Withdraw Cash\n";
-            std::cout << "9. Buy Stock\n";
-            std::cout << "10. Go to Friends Menu\n";
-            std::cout << "11. Go to Stock List Menu\n";
+            std::cout << "4. Go to Portfolio Menu\n";
+            std::cout << "5. Go to Friends Menu\n";
+            std::cout << "6. Go to Stock List Menu\n";
         }
 
         std::cout << "Enter your choice: ";
@@ -47,35 +40,67 @@ int main() {
                 running = false;
                 break;
             case 4:
-                createPortfolio(currentUsername);
-                break;
+                portfolioMenu();
+                break;            
             case 5:
-                viewPortfolios(currentUsername);
-                break;
-            case 6:
-                deletePortfolio(currentUsername);
-                break;
-            case 7:
-                depositCash(currentUsername);
-                break;
-            case 8:
-                withdrawCash(currentUsername);
-                break;   
-            case 9:
-                buyStock(currentUsername);
-                break;   
-            case 10:
                 friendMenu(); 
                 break;   
-            case 11:
+            case 6:
                 stockListMenu(); 
                 break;      
             default:
                 std::cout << "Invalid choice. Try again.\n";
         }
     }
-
     return 0;
+}
+
+void portfolioMenu() {
+    int choice;
+
+    while (1) {
+        std::cout << "=============================\n";
+        std::cout << "     Portfolio Menu\n";
+        std::cout << "=============================\n";
+        std::cout << "1. Create Portfolio\n";
+        std::cout << "2. View My Portfolios\n";
+        std::cout << "3. Delete Portfolio\n";
+        std::cout << "4. Deposit Cash\n";
+        std::cout << "5. Withdraw Cash\n";
+        std::cout << "6. Buy Stock\n";
+        std::cout << "7. Sell Stock\n";
+        std::cout << "8. Go Back to Main Menu\n";
+        std::cout << "Enter your choice: ";
+        std::cin >> choice;
+
+        switch (choice) {
+            case 1:
+                createPortfolio(currentUsername);
+                break;
+            case 2:
+                viewPortfolios(currentUsername);
+                break;
+            case 3:
+                deletePortfolio(currentUsername);
+                break;
+            case 4:
+                depositCash(currentUsername);
+                break;
+            case 5:
+                withdrawCash(currentUsername);
+                break;
+            case 6:
+                buyStock(currentUsername);
+                break;
+            case 7:
+                sellStock(currentUsername);
+                break;
+            case 8:
+                return;
+            default:
+                std::cout << "Invalid choice. Try again.\n";
+        }
+    }
 }
 
 void friendMenu(){

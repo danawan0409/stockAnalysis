@@ -3,8 +3,6 @@
 #include "stocklist.h"
 #include <termios.h>
 
-std::string connect_info = "dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432";
-
 void createStockList(const std::string& ownerUsername) {
     std::string listName;
     std::cout << "Enter the name of the stock list: ";

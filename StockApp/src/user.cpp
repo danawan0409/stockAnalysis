@@ -11,7 +11,7 @@ void registerUser() {
     std::cin >> password;
 
     try {
-        pqxx::connection C("dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432");
+        pqxx::connection C(connect_info);
         pqxx::work W(C);
 
         std::string userQuery = "INSERT INTO \"User\" (username, password) VALUES (" +
@@ -44,7 +44,7 @@ void loginUser() {
     std::cin >> password;
 
     try {
-        pqxx::connection C("dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432");
+        pqxx::connection C(connect_info);
         pqxx::nontransaction N(C);
 
         std::string query = "SELECT * FROM \"User\" WHERE username = " +
