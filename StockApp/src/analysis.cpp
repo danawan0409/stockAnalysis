@@ -69,7 +69,7 @@ void findStatistic(const std::string& statName) {
             valid = true;
         } else if (choice == "2") {
             std::string owner, name, symbol;
-            bool valid = false;
+            valid = false;
 
             std::cout << "Enter the owner of the stock list: ";
             std::cin >> owner;
