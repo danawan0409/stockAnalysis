@@ -1,6 +1,7 @@
 #include <iostream>
 #include <pqxx/pqxx>
 #include <vector>
+#include <iomanip>
 #include "portfolio.h"
 
 void createPortfolio(const std::string& ownerUsername) {
@@ -88,15 +89,23 @@ void viewPortfolios(const std::string& ownerUsername) {
         if (stocks.empty()) {
             std::cout << "(no stocks held)\n";
         } else {
-            std::cout << "Symbol\tQuantity\tPrice\t\tValue\n";
-            std::cout << "---------------------------------------------\n";
+            std::cout << std::left << std::setw(10) << "Symbol"
+                      << std::setw(10) << "Quantity"
+                      << std::setw(12) << "Price"
+                      << std::setw(12) << "Value" << "\n";
+            std::cout << "--------------------------------------------------\n";
+
             for (const auto& stock : stocks) {
                 std::string symbol = stock["stockid"].as<std::string>();
                 int qty = stock["quantity"].as<int>();
                 double price = stock["close"].as<double>();
                 double value = qty * price;
 
-                std::cout << symbol << "\t" << qty << "\t\t$" << price << "\t$" << value << "\n";
+                std::cout << std::left << std::setw(10) << symbol
+                          << std::setw(10) << qty
+                          << "$" << std::setw(11) << std::fixed << std::setprecision(2) << price
+                          << "$" << std::setw(11) << std::fixed << std::setprecision(2) << value
+                          << "\n";
             }
         }
     } catch (const std::exception& e) {
