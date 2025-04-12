@@ -14,7 +14,6 @@ bool getValidatedInput(T& input) {
         std::cout << "Invalid input. Please enter a valid value.\n";
         return false;
     }
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // discard trailing newline
     return true;
 }
 
