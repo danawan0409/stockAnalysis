@@ -164,7 +164,8 @@ void viewStockLists(const std::string& ownerUsername) {
                     "(S.ownerUsername = " + W.quote(ownerUsername) + ") "
                     "OR (SS.receiverUsername = " + W.quote(ownerUsername) + ") "
                     "OR (S.visibility = 'public') "
-                    "ORDER BY S.ownerUsername, S.name "; 
+                    "ORDER BY S.ownerUsername, S.name "
+                    "LIMIT 20 OFFSET " + W.quote(offset) + ";";
 
                 pqxx::result res = W.exec(query);
 
