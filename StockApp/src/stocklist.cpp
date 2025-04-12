@@ -2,6 +2,9 @@
 #include <pqxx/pqxx>
 #include "stocklist.h"
 #include <termios.h>
+#include <unistd.h>
+#include <stdio.h>
+#include "global.h"
 
 void createStockList(const std::string& ownerUsername) {
     std::string listName;
