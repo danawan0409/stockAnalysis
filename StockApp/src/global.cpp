@@ -23,9 +23,10 @@ template bool getValidatedInput<double>(double&);
 template bool getValidatedInput<std::string>(std::string&);
 
 void pauseConsole() {
-    std::cout << "\nPress Enter to continue...\n";
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    std::cin.get();
+    std::cin.clear();
+    std::string dummy;
+    std::cout << "\nPress Enter to continue...";
+    std::getline(std::cin, dummy);
 
     // Clear the screen after user presses Enter
 #ifdef _WIN32
