@@ -9,5 +9,6 @@ extern std::string currentUsername;
 extern std::string connect_info;
 
 void pauseConsole();
+void clearConsole();
 
 #endif
