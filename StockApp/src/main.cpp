@@ -20,10 +20,12 @@ int main() {
         if (!currentUsername.empty()) {
             std::cout << "4. Create Portfolio\n";
             std::cout << "5. View My Portfolios\n";
-            std::cout << "6. Deposit Cash\n";
-            std::cout << "7. Withdraw Cash\n";
-            std::cout << "8. Go to Friends Menu\n";
-            std::cout << "9. Go to Stock List Menu\n";
+            std::cout << "6. Delete Portfolio\n";
+            std::cout << "7. Deposit Cash\n";
+            std::cout << "8. Withdraw Cash\n";
+            std::cout << "9. Buy Stock\n";
+            std::cout << "10. Go to Friends Menu\n";
+            std::cout << "11. Go to Stock List Menu\n";
         }
 
         std::cout << "Enter your choice: ";
@@ -46,15 +48,21 @@ int main() {
                 viewPortfolios(currentUsername);
                 break;
             case 6:
-                depositCash(currentUsername);
+                deletePortfolio(currentUsername);
                 break;
             case 7:
-                withdrawCash(currentUsername);
-                break;      
+                depositCash(currentUsername);
+                break;
             case 8:
-                friendMenu(); 
+                withdrawCash(currentUsername);
                 break;   
             case 9:
+                buyStock(currentUsername);
+                break;   
+            case 10:
+                friendMenu(); 
+                break;   
+            case 11:
                 stockListMenu(); 
                 break;      
             default:
@@ -155,14 +163,12 @@ void stockListMenu(){
             case 7:
                 addReviewStockList(currentUsername); 
                 break;
-            case 8:
-                editReviewStockList(currentUsername); 
+            case 13:
+                depositCash(currentUsername);
                 break;
-            case 9:
-                deleteReviewStockList(currentUsername);
-                break;
-            case 10:
-                return;       
+            case 14:
+                withdrawCash(currentUsername);
+                break;            
             default:
                 std::cout << "Invalid choice. Try again.\n";
         }

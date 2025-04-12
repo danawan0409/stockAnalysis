@@ -14,13 +14,17 @@ void registerUser() {
         pqxx::connection C("dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432");
         pqxx::work W(C);
 
-        std::string query = "INSERT INTO \"User\" (username, password) VALUES (" +
+        std::string userQuery = "INSERT INTO \"User\" (username, password) VALUES (" +
                             W.quote(username) + ", " + W.quote(password) + ");";
+        W.exec(userQuery);
 
-        W.exec(query);
+        std::string portfolioName = username + "'s portfolio";
+        std::string portfolioQuery = "INSERT INTO Portfolio (name, cashAccount, ownerUsername) VALUES (" +
+                            W.quote(portfolioName) + ", 0.0, " + W.quote(username) + ");";
+        W.exec(portfolioQuery);
         W.commit();
 
-        std::cout << "User registered successfully!\n";
+        std::cout << "User registered successfully with default portfolio!\n";
     } catch (const pqxx::sql_error &e) {
         if (std::string(e.what()).find("duplicate key") != std::string::npos) {
             std::cerr << "Username already exists.\n";
