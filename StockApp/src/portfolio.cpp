@@ -167,16 +167,9 @@ void depositCash(const std::string& ownerUsername) {
             W.exec(deduct);
             W.exec(add);
             W.commit();
-            std::cout << "Deposit successful!\n";
 
-            // Show updated balance
-            pqxx::nontransaction N(C);
-            std::string query =
-                "SELECT cashAccount FROM Portfolio WHERE name = " + W.quote(targetPortfolio) +
-                " AND ownerUsername = " + W.quote(ownerUsername) + ";";
-            pqxx::result newR = N.exec(query);
-            double newBalance = newR[0]["cashaccount"].as<double>();
-            std::cout << "Updated balance: $" << newBalance << "\n";
+            std::cout << "Transferred $" << amount << " from " << sourcePortfolio
+                      << " to " << targetPortfolio << "\n";
         } else {
             std::cout << "Invalid deposit source.\n";
         }
@@ -227,13 +220,6 @@ void withdrawCash(const std::string& ownerUsername) {
         W.commit();
         std::cout << "Withdrawal successful. $" << amount << " withdrawn from " << portfolioName << "\n";
 
-        pqxx::nontransaction N(C);
-        std::string query =
-            "SELECT cashAccount FROM Portfolio WHERE name = " + W.quote(portfolioName) +
-            " AND ownerUsername = " + W.quote(ownerUsername) + ";";
-        pqxx::result newR = N.exec(query);
-        double newBalance = newR[0]["cashaccount"].as<double>();
-        std::cout << "Updated balance: $" << newBalance << "\n";
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
     }
