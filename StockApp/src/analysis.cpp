@@ -8,12 +8,128 @@
 
 using json = nlohmann::json;
 
-void findVariation(){
-    return; 
+void findStatistic(const std::string& statName) {
+    std::string choice;
+    std::cout << "Do you want to find the " << statName << " of a stock in a (1) Portfolio or (2) StockList? ";
+    std::cin >> choice;
+
+    std::string symbol, username, name;
+    bool valid = false;
+
+    try {
+        pqxx::connection C("your_connection_string_here");
+        pqxx::work W(C);
+
+        if (choice == "1") {
+            std::cout << "Enter your username: ";
+            std::cin >> username;
+            std::cout << "Enter the name of the portfolio: ";
+            std::cin.ignore();
+            std::getline(std::cin, name);
+
+            pqxx::result res = W.exec(
+                "SELECT 1 FROM Portfolio WHERE name = " + W.quote(name) +
+                " AND ownerUsername = " + W.quote(username) + ";"
+            );
+
+            if (res.empty()) {
+                std::cout << "Portfolio not found.\n";
+                return;
+            }
+
+            std::cout << "Enter the stock symbol: ";
+            std::cin >> symbol;
+
+            pqxx::result inPortfolio = W.exec(
+                "SELECT 1 FROM PortfolioHasStock WHERE portfolioName = " + W.quote(name) +
+                " AND ownerUsername = " + W.quote(username) +
+                " AND stockID = " + W.quote(symbol) + ";"
+            );
+
+            if (inPortfolio.empty()) {
+                std::cout << "Stock is not in the portfolio.\n";
+                return;
+            }
+
+            valid = true;
+
+        } else if (choice == "2") {
+            std::cout << "Enter your username: ";
+            std::cin >> username;
+            std::cout << "Enter the owner of the stock list: ";
+            std::string owner;
+            std::cin >> owner;
+            std::cout << "Enter the name of the stock list: ";
+            std::cin.ignore();
+            std::getline(std::cin, name);
+
+            pqxx::result res = W.exec(
+                "SELECT 1 FROM StockList WHERE name = " + W.quote(name) +
+                " AND ownerUsername = " + W.quote(owner) + ";"
+            );
+
+            if (res.empty()) {
+                std::cout << "Stock list not found.\n";
+                return;
+            }
+
+            pqxx::result access = W.exec(
+                "SELECT 1 FROM StockList WHERE name = " + W.quote(name) +
+                " AND ownerUsername = " + W.quote(owner) +
+                " AND (visibility = 'public' OR ownerUsername = " + W.quote(username) +
+                " OR EXISTS (SELECT 1 FROM ShareStockList WHERE ownerUsername = " + W.quote(owner) +
+                " AND receiverUsername = " + W.quote(username) +
+                " AND stockListName = " + W.quote(name) + "));"
+            );
+
+            if (access.empty()) {
+                std::cout << "You do not have access to this stock list.\n";
+                return;
+            }
+
+            std::cout << "Enter the stock symbol: ";
+            std::cin >> symbol;
+
+            pqxx::result inList = W.exec(
+                "SELECT 1 FROM StockListHasStock WHERE stockListName = " + W.quote(name) +
+                " AND ownerUsername = " + W.quote(owner) +
+                " AND stockID = " + W.quote(symbol) + ";"
+            );
+
+            if (inList.empty()) {
+                std::cout << "Stock is not in the stock list.\n";
+                return;
+            }
+
+            valid = true;
+        } else {
+            std::cout << "Invalid choice.\n";
+            return;
+        }
+
+        if (valid) {
+            pqxx::result result = W.exec(
+                "SELECT " + statName + " FROM CachedStockStatistics WHERE symbol = " + W.quote(symbol) + ";"
+            );
+
+            if (result.empty()) {
+                std::cout << "Statistic not cached yet for stock " << symbol << ".\n";
+            } else {
+                std::cout << statName << " for " << symbol << " is: " << result[0][0].as<std::string>() << "\n";
+            }
+        }
+
+    } catch (const std::exception& e) {
+        std::cerr << "Database error: " << e.what() << "\n";
+    }
 }
 
-void findBeta(){
-    return; 
+void findVariation() {
+    findStatistic("correlation");
+}
+
+void findBeta() {
+    findStatistic("beta");
 }
 
 bool hasAccessToStockList(pqxx::work& W, const std::string& user, const std::string& owner, const std::string& listName) {

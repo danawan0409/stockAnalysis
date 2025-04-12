@@ -145,3 +145,59 @@ INSERT INTO Stock(symbol, close)
 SELECT symbol, close
 FROM StockHistory
 WHERE timestamp = '2018-02-07';
+
+
+WITH stock_returns AS (
+    SELECT 
+        symbol,
+        timestamp,
+        (close - LAG(close) OVER (PARTITION BY symbol ORDER BY timestamp)) / 
+        LAG(close) OVER (PARTITION BY symbol ORDER BY timestamp) AS daily_return
+    FROM StockHistory
+    WHERE symbol IN (SELECT DISTINCT symbol FROM StockHistory)
+),
+market_returns AS (
+    SELECT 
+        timestamp,
+        AVG(daily_return) AS market_return
+    FROM stock_returns
+    GROUP BY timestamp
+),
+filtered AS (
+    SELECT 
+        sr.timestamp,
+        sr.symbol,
+        sr.daily_return AS stock_return,
+        mr.market_return
+    FROM stock_returns sr
+    JOIN market_returns mr ON sr.timestamp = mr.timestamp
+),
+stats AS (
+    SELECT 
+        symbol,
+        VAR_POP(stock_return) AS stock_variance,
+        COVAR_POP(stock_return, market_return) AS covariance,
+        VAR_POP(market_return) AS market_variance
+    FROM filtered
+    GROUP BY symbol
+)
+INSERT INTO CachedStockStatistics (symbol, beta, correlation, last_updated)
+SELECT 
+    symbol,
+    (covariance / NULLIF(market_variance, 0)) AS beta,
+    (covariance / (SQRT(stock_variance) * SQRT(market_variance))) AS correlation,
+    CURRENT_TIMESTAMP
+FROM stats
+ON CONFLICT (symbol)  -- If the symbol already exists, update the values
+DO UPDATE SET 
+    beta = EXCLUDED.beta,
+    correlation = EXCLUDED.correlation,
+    last_updated = CURRENT_TIMESTAMP;
+
+CREATE TABLE CachedStockStatistics(
+    symbol VARCHAR(10) NOT NULL,
+    beta NUMERIC(10, 5),  -- Beta with precision for up to 5 decimal places
+    correlation NUMERIC(10, 5),  -- Correlation coefficient with precision for up to 5 decimal places
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- Track when the cache was last updated
+    PRIMARY KEY (symbol)
+);
