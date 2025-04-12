@@ -13,7 +13,7 @@ void findStatistic(const std::string& statName) {
     std::cout << "Do you want to find the " << statName << " of a stock in a (1) Portfolio or (2) StockList? ";
     std::cin >> choice;
 
-    std::string symbol, username, name;
+    std::string symbol, name;
     bool valid = false;
 
     try {
@@ -21,15 +21,13 @@ void findStatistic(const std::string& statName) {
         pqxx::work W(C);
 
         if (choice == "1") {
-            std::cout << "Enter your username: ";
-            std::cin >> username;
             std::cout << "Enter the name of the portfolio: ";
             std::cin.ignore();
             std::getline(std::cin, name);
 
             pqxx::result res = W.exec(
                 "SELECT 1 FROM Portfolio WHERE name = " + W.quote(name) +
-                " AND ownerUsername = " + W.quote(username) + ";"
+                " AND ownerUsername = " + W.quote(currentUsername) + ";"
             );
 
             if (res.empty()) {
@@ -42,7 +40,7 @@ void findStatistic(const std::string& statName) {
 
             pqxx::result inPortfolio = W.exec(
                 "SELECT 1 FROM PortfolioHasStock WHERE portfolioName = " + W.quote(name) +
-                " AND ownerUsername = " + W.quote(username) +
+                " AND ownerUsername = " + W.quote(currentUsername) +
                 " AND stockID = " + W.quote(symbol) + ";"
             );
 
@@ -54,8 +52,6 @@ void findStatistic(const std::string& statName) {
             valid = true;
 
         } else if (choice == "2") {
-            std::cout << "Enter your username: ";
-            std::cin >> username;
             std::cout << "Enter the owner of the stock list: ";
             std::string owner;
             std::cin >> owner;
@@ -76,9 +72,9 @@ void findStatistic(const std::string& statName) {
             pqxx::result access = W.exec(
                 "SELECT 1 FROM StockList WHERE name = " + W.quote(name) +
                 " AND ownerUsername = " + W.quote(owner) +
-                " AND (visibility = 'public' OR ownerUsername = " + W.quote(username) +
+                " AND (visibility = 'public' OR ownerUsername = " + W.quote(currentUsername) +
                 " OR EXISTS (SELECT 1 FROM ShareStockList WHERE ownerUsername = " + W.quote(owner) +
-                " AND receiverUsername = " + W.quote(username) +
+                " AND receiverUsername = " + W.quote(currentUsername) +
                 " AND stockListName = " + W.quote(name) + "));"
             );
 
