@@ -26,6 +26,8 @@ int main() {
             std::cout << "10. Delete Friend\n";
             std::cout << "11. Create Portfolio\n";
             std::cout << "12. View My Portfolios\n";
+            std::cout << "13. Deposit Cash\n";
+            std::cout << "14. Withdraw Cash\n";
         }
 
         std::cout << "Enter your choice: ";
@@ -68,6 +70,12 @@ int main() {
             case 12:
                 viewPortfolios(currentUsername);
                 break;
+            case 13:
+                depositCash(currentUsername);
+                break;
+            case 14:
+                withdrawCash(currentUsername);
+                break;            
             default:
                 std::cout << "Invalid choice. Try again.\n";
         }
