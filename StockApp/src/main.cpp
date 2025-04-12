@@ -17,40 +17,58 @@ int main() {
         std::cout << "=============================\n";
         std::cout << "  Welcome to Stock Platform \n";
         std::cout << "=============================\n";
-        std::cout << "1. Register\n";
-        std::cout << "2. Login\n";
-        std::cout << "3. Exit\n";
 
-        if (!currentUsername.empty()) {
-            std::cout << "4. Go to Portfolio Menu\n";
-            std::cout << "5. Go to Friends Menu\n";
-            std::cout << "6. Go to Stock List Menu\n";
+        if (currentUsername.empty()) {
+            std::cout << "1. Register\n";
+            std::cout << "2. Login\n";
+            std::cout << "3. Exit\n";
+        } else {
+            std::cout << "Logged in as: " << currentUsername << "\n";
+            std::cout << "1. Logout\n";
+            std::cout << "2. Go to Portfolio Menu\n";
+            std::cout << "3. Go to Friends Menu\n";
+            std::cout << "4. Go to Stock List Menu\n";
+            std::cout << "5. Exit\n";
         }
 
         std::cout << "Enter your choice: ";
         std::cin >> choice;
 
-        switch (choice) {
-            case 1:
-                registerUser();
-                break;
-            case 2:
-                loginUser();
-                break;
-            case 3:
-                running = false;
-                break;
-            case 4:
-                portfolioMenu();
-                break;            
-            case 5:
-                friendMenu(); 
-                break;   
-            case 6:
-                stockListMenu(); 
-                break;      
-            default:
-                std::cout << "Invalid choice. Try again.\n";
+        if (currentUsername.empty()) {
+            switch (choice) {
+                case 1:
+                    registerUser();
+                    break;
+                case 2:
+                    loginUser();
+                    break;
+                case 3:
+                    running = false;
+                    break;
+                default:
+                    std::cout << "Invalid choice. Try again.\n";
+            }
+        } else {
+            switch (choice) {
+                case 1:
+                    currentUsername.clear();
+                    std::cout << "Logged out successfully.\n";
+                    break;
+                case 2:
+                    portfolioMenu();
+                    break;
+                case 3:
+                    friendMenu();
+                    break;
+                case 4:
+                    stockListMenu();
+                    break;
+                case 5:
+                    running = false;
+                    break;
+                default:
+                    std::cout << "Invalid choice. Try again.\n";
+            }
         }
     }
     return 0;
