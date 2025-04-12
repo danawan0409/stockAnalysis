@@ -196,8 +196,8 @@ DO UPDATE SET
 
 CREATE TABLE CachedStockStatistics(
     symbol VARCHAR(10) NOT NULL,
-    beta NUMERIC(10, 5),         -- Beta with precision for up to 5 decimal places
-    variation NUMERIC(10, 5),    -- Stock variance instead of correlation
+    beta NUMERIC(10, 5),         
+    variation NUMERIC(10, 5),    
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (symbol)
 );
