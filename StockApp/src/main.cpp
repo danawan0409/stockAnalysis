@@ -4,10 +4,12 @@
 #include "portfolio.h"
 #include "friend.h"
 #include "stocklist.h"
+#include "analysis.h"
 
 void portfolioMenu();
 void friendMenu();
 void stockListMenu();
+void analysisMenu();
 
 int main() {
     int choice;
@@ -28,7 +30,8 @@ int main() {
             std::cout << "2. Go to Portfolio Menu\n";
             std::cout << "3. Go to Friends Menu\n";
             std::cout << "4. Go to Stock List Menu\n";
-            std::cout << "5. Exit\n";
+            std::cout << "4. Go to Analysis Menu\n";
+            std::cout << "6. Exit\n";
         }
 
         std::cout << "Enter your choice: ";
@@ -67,7 +70,10 @@ int main() {
                 case 4:
                     stockListMenu();
                     break;
-                case 5:
+                case 5: 
+                    analysisMenu(); 
+                    break; 
+                case 6:
                     running = false;
                     break;
                 default:
@@ -258,6 +264,42 @@ void stockListMenu(){
             default:
                 std::cout << "Invalid choice. Try again.\n";
                 pause();
+        }
+    }
+}
+
+void analysisMenu(){
+    int choice;
+
+    while (1) {
+        std::cout << "=============================\n";
+        std::cout << "  Analysis Menu\n";
+        std::cout << "=============================\n";
+        std::cout << "1. View Correlation Matrix\n";
+        std::cout << "2. View Covariance Matrix\n";
+        std::cout << "3. View Variation for a Stock\n";
+        std::cout << "4. View Beta for a Stock\\n";
+        std::cout << "5. Go Back to Main Menu\n";
+        std::cout << "Enter your choice: ";
+        std::cin >> choice;
+
+        switch (choice) {
+            case 1:
+                findStockListCorrelationMatrix();
+                break;
+            case 2:
+                findStockListCovarianceMatrix(); 
+                break;
+            case 3:
+                findVariation();
+                break;
+            case 4:
+                findBeta();
+                break;
+            case 5:
+                return;        
+            default:
+                std::cout << "Invalid choice. Try again.\n";
         }
     }
 }
