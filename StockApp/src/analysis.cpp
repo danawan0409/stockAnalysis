@@ -52,6 +52,21 @@ void findStatistic(const std::string& statName) {
             valid = true;
         } else if (choice == "2") {
             std::string owner;
+            std::cout << "Enter the owner of the stock list: ";
+            std::cin >> owner;
+            std::cout << "Enter the name of the stock list: ";
+            std::cin.ignore();
+            std::getline(std::cin, name);
+
+            pqxx::result res = W.exec(
+                "SELECT 1 FROM StockList WHERE name = " + W.quote(name) +
+                " AND ownerUsername = " + W.quote(owner) + ";"
+            );
+            if (res.empty()) {
+                std::cout << "Stock list not found.\n";
+                return;
+            }
+            
             std::string start, end;
             std::regex dateRegex(R"(\d{4}-\d{2}-\d{2})");
 
@@ -66,15 +81,6 @@ void findStatistic(const std::string& statName) {
             std::cin >> end;
             if (!std::regex_match(end, dateRegex)) {
                 std::cout << "Invalid end date format.\n";
-                return;
-            }
-
-            pqxx::result res = W.exec(
-                "SELECT 1 FROM StockList WHERE name = " + W.quote(name) +
-                " AND ownerUsername = " + W.quote(owner) + ";"
-            );
-            if (res.empty()) {
-                std::cout << "Stock list not found.\n";
                 return;
             }
 
