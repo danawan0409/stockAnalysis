@@ -66,23 +66,6 @@ void findStatistic(const std::string& statName) {
                 std::cout << "Stock list not found.\n";
                 return;
             }
-            
-            std::string start, end;
-            std::regex dateRegex(R"(\d{4}-\d{2}-\d{2})");
-
-            std::cout << "Enter start date (YYYY-MM-DD): ";
-            std::cin >> start;
-            if (!std::regex_match(start, dateRegex)) {
-                std::cout << "Invalid start date format.\n";
-                return;
-            }
-
-            std::cout << "Enter end date (YYYY-MM-DD): ";
-            std::cin >> end;
-            if (!std::regex_match(end, dateRegex)) {
-                std::cout << "Invalid end date format.\n";
-                return;
-            }
 
             pqxx::result access = W.exec(
                 "SELECT 1 FROM StockList WHERE name = " + W.quote(name) +
