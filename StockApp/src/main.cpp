@@ -63,15 +63,19 @@ int main() {
                     break;
                 case 2:
                     portfolioMenu();
+                    pauseConsole();
                     break;
                 case 3:
                     friendMenu();
+                    pauseConsole();
                     break;
                 case 4:
                     stockListMenu();
+                    pauseConsole();
                     break;
                 case 5: 
                     analysisMenu(); 
+                    pauseConsole();
                     break; 
                 case 6:
                     running = false;
