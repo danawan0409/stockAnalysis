@@ -41,21 +41,25 @@ int main() {
             switch (choice) {
                 case 1:
                     registerUser();
+                    pause();
                     break;
                 case 2:
                     loginUser();
+                    pause();
                     break;
                 case 3:
                     running = false;
                     break;
                 default:
                     std::cout << "Invalid choice. Try again.\n";
+                    pause();
             }
         } else {
             switch (choice) {
                 case 1:
                     currentUsername.clear();
                     std::cout << "Logged out successfully.\n";
+                    pause();
                     break;
                 case 2:
                     portfolioMenu();
@@ -74,6 +78,7 @@ int main() {
                     break;
                 default:
                     std::cout << "Invalid choice. Try again.\n";
+                    pause();
             }
         }
     }
@@ -101,29 +106,37 @@ void portfolioMenu() {
         switch (choice) {
             case 1:
                 createPortfolio(currentUsername);
+                pause();
                 break;
             case 2:
                 viewPortfolios(currentUsername);
+                pause();
                 break;
             case 3:
                 deletePortfolio(currentUsername);
+                pause();
                 break;
             case 4:
                 depositCash(currentUsername);
+                pause();
                 break;
             case 5:
                 withdrawCash(currentUsername);
+                pause();
                 break;
             case 6:
                 buyStock(currentUsername);
+                pause();
                 break;
             case 7:
                 sellStock(currentUsername);
+                pause();
                 break;
             case 8:
                 return;
             default:
                 std::cout << "Invalid choice. Try again.\n";
+                pause();
         }
     }
 }
@@ -149,29 +162,37 @@ void friendMenu(){
         switch (choice) {
             case 1:
                 sendFriendRequest(currentUsername);
+                pause();
                 break;
             case 2:
                 viewIncomingFriendRequests(currentUsername);
+                pause();
                 break;
             case 3:
                 viewOutgoingFriendRequests(currentUsername); 
+                pause();
                 break;
             case 4:
                 viewFriends(currentUsername); 
+                pause();
                 break;
             case 5:
                 acceptFriendRequest(currentUsername); 
+                pause();
                 break;
             case 6:
                 rejectFriendRequest(currentUsername); 
+                pause();
                 break;
             case 7:
                 deleteFriend(currentUsername);
+                pause();
                 break;
             case 8:
                 return;       
             default:
                 std::cout << "Invalid choice. Try again.\n";
+                pause();
         }
     }
 }
@@ -200,38 +221,49 @@ void stockListMenu(){
         switch (choice) {
             case 1:
                 viewStockLists(currentUsername);
+                pause();
                 break;
             case 2:
                 viewOwnStockLists(currentUsername); 
+                pause();
                 break;
             case 3:
                 createStockList(currentUsername);
+                pause();
                 break;
             case 4:
                 deleteStockList(currentUsername);
+                pause();
                 break;
             case 5:
                 shareStockList(currentUsername); 
+                pause();
                 break;
             case 6:
                 viewReviewStockList(currentUsername); 
+                pause();
                 break;
             case 7:
                 addReviewStockList(currentUsername); 
+                pause();
                 break;        
             case 8:
                 editReviewStockList(currentUsername); 
+                pause();
                 break;
             case 9:
                 deleteReviewStockList(currentUsername); 
+                pause();
                 break;
             case 10: 
                 viewStockListsStock(currentUsername); 
+                pause();
                 break; 
             case 11:
                 return;        
             default:
                 std::cout << "Invalid choice. Try again.\n";
+                pause();
         }
     }
 }

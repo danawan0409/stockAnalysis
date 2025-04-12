@@ -5,4 +5,7 @@
 
 extern std::string currentUsername;
 extern std::string connect_info;
+
+void pause();
+
 #endif
