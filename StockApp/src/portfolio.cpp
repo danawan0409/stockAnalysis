@@ -651,8 +651,36 @@ void viewPortfolioHistorical(const std::string& ownerUsername) {
             drawASCII(downsampleData(date_price, 30));
         } else {
             drawASCII(date_price);
-        }        
+        }
 
+        // Ask user if they want to display the table
+        std::string showTable;
+        std::cout << "Would you like to display the raw data table? (yes/no): ";
+        std::cin >> showTable;
+
+        if (showTable == "yes" || showTable == "y" || showTable == "Y") {
+            std::cout << "\nDate        | Close Price\n";
+            std::cout << "--------------------------\n";
+        
+            int count = 0;
+            for (size_t i = 0; i < date_price.size(); ++i) {
+                std::cout << date_price[i].first << " | $"
+                          << std::fixed << std::setprecision(2)
+                          << date_price[i].second << "\n";
+        
+                count++;
+                if (count % 20 == 0 && i + 1 < date_price.size()) {
+                    std::string cont;
+                    std::cout << "\nShow more? (yes/no): ";
+                    std::cin >> cont;
+                    if (cont != "yes" && cont != "y" && cont != "Y") {
+                        break;
+                    }
+                    std::cout << "\nDate        | Close Price\n";
+                    std::cout << "--------------------------\n";
+                }
+            }
+        }        
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
     }
