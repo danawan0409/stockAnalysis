@@ -10,7 +10,7 @@ extern std::string connect_info;
 
 template<typename T>
 bool getValidatedInput(T& input);
-
+char getch(); 
 void pauseConsole();
 void clearConsole();
 
