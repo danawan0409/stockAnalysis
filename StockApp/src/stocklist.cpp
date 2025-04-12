@@ -46,7 +46,7 @@ void createStockList(const std::string& ownerUsername) {
         W.exec(insertStockList);
 
         // Add stocks
-        std::string response;
+        std::string response = "y"; 
         do {
             std::string input;
             std::cout << "Add a stock (format: SYMBOL, QUANTITY): ";
