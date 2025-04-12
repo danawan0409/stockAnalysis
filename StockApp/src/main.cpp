@@ -44,25 +44,25 @@ int main() {
                 running = false;
                 break;
             case 4:
-                sendFriendRequest(1);
+                sendFriendRequest(currentUsername);
                 break;
             case 5:
-                viewIncomingFriendRequests(1);
+                viewIncomingFriendRequests(currentUsername);
                 break;
             case 6:
-                viewOutgoingFriendRequests(1); 
+                viewOutgoingFriendRequests(currentUsername); 
                 break;
             case 7:
-                viewFriends(1); 
+                viewFriends(currentUsername); 
                 break;
             case 8:
-                acceptFriendRequest(1); 
+                acceptFriendRequest(currentUsername); 
                 break;
             case 9:
-                rejectFriendRequest(1); 
+                rejectFriendRequest(currentUsername); 
                 break;
             case 10:
-                deleteFriend(1);
+                deleteFriend(currentUsername);
                 break;
             case 11:
                 createPortfolio(currentUsername);

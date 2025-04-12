@@ -3,19 +3,19 @@
 
 #include <string>
 
-void sendFriendRequest(int userID);
+void sendFriendRequest(const std::string& senderUsername);
 
-void viewIncomingFriendRequests(int userID);
+void viewIncomingFriendRequests(const std::string& username);
 
-void viewOutgoingFriendRequests(int userID);
+void viewOutgoingFriendRequests(const std::string& username);
 
-void viewFriends(int userID);
+void viewFriends(const std::string& username);
 
-void acceptFriendRequest(int userID);
+void acceptFriendRequest(const std::string& receiverUsernam);
 
-void rejectFriendRequest(int userID);
+void rejectFriendRequest(const std::string& receiverUsernam);
 
-void deleteFriend(int userID);
+void deleteFriend(const std::string& username);
 
 
 #endif  

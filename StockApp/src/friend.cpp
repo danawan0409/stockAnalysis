@@ -4,18 +4,22 @@
 
 std::string connect_info = "dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432"; 
 
-void sendFriendRequest(int userID) {
+void sendFriendRequest(const std::string& senderUsername) {
     std::string receiverUsername;
     std::cout << "Enter the username of the user you want to request: ";
     std::cin >> receiverUsername;
+
+    if (senderUsername == receiverUsername) {
+        std::cout << "You can't send a friend request to yourself.\n";
+        return;
+    }
 
     try {
         pqxx::connection C(connect_info);
         pqxx::work W(C);
 
-        // Step 1: Get the receiver's ID from their username
         pqxx::result res = W.exec(
-            "SELECT id FROM \"User\" WHERE username = " + W.quote(receiverUsername) + ";"
+            "SELECT username FROM \"User\" WHERE username = " + W.quote(receiverUsername) + ";"
         );
 
         if (res.empty()) {
@@ -23,44 +27,49 @@ void sendFriendRequest(int userID) {
             return;
         }
 
-        int receiverID = res[0]["id"].as<int>();
-
-        // Step 2: Check if the two users are already friends or have already sent a request
+        // Step 1: Check for rejected or deleted requests older than 5 minutes
         pqxx::result timeCheck = W.exec(
-            "SELECT EXTRACT(EPOCH FROM CURRENT_TIMESTAMP - updatedTime) FROM Friends "
-            "WHERE (senderID = " + W.quote(userID) + " AND receiverID = " + W.quote(receiverID) + ") "
-            "OR (senderID = " + W.quote(receiverID) + " AND receiverID = " + W.quote(userID) + ") "
+            "SELECT EXTRACT(EPOCH FROM CURRENT_TIMESTAMP - updatedTime) AS seconds "
+            "FROM \"Friends\" "
+            "WHERE ((senderUsername = " + W.quote(senderUsername) + " AND receiverUsername = " + W.quote(receiverUsername) + ") "
+            "   OR (senderUsername = " + W.quote(receiverUsername) + " AND receiverUsername = " + W.quote(senderUsername) + ")) "
             "AND state IN ('rejected', 'deleted');"
         );
-        if (!timeCheck.empty()) {
-            // If time difference is greater than 5 minutes, update request status
-            if (timeCheck[0][0].as<double>() > 300) {
-                std::string query = "UPDATE Friends "
-                                    "SET state = 'pending', "
-                                    "senderID = " + W.quote(userID) + ", "
-                                    "receiverID = " + W.quote(receiverID) + ", "
-                                    "requestTime = CURRENT_TIMESTAMP, "
-                                    "updatedTime = CURRENT_TIMESTAMP "
-                                    "WHERE ((senderID = " + W.quote(userID) + " AND receiverID = " + W.quote(receiverID) + ") "
-                                    "OR (senderID = " + W.quote(receiverID) + " AND receiverID = " + W.quote(userID) + ")) "
-                                    "AND state IN ('rejected', 'deleted') "
-                                    "AND updatedTime <= CURRENT_TIMESTAMP - interval '5 minutes';";
-                W.exec(query);
-                W.commit();
-                std::cout << "Friend request re-sent to '" << receiverUsername << "'.\n";
-            } else {
-                // If time is less than 5 minutes, show the constraint message
-                std::cout << "You can only send a new friend request after 5 minutes from rejection or deletion.\n";
-            }
-        } else {
-            // Step 3: If no previous request exists, insert a new one
+
+        if (!timeCheck.empty() && timeCheck[0]["seconds"].as<double>() > 300) {
             W.exec(
-                "INSERT INTO Friends (senderID, receiverID, state, requestTime, updatedTime) "
-                "VALUES (" + W.quote(userID) + ", " + W.quote(receiverID) + ", 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);"
+                "UPDATE \"Friends\" "
+                "SET state = 'pending', senderUsername = " + W.quote(senderUsername) + 
+                ", receiverUsername = " + W.quote(receiverUsername) + 
+                ", requestTime = CURRENT_TIMESTAMP, updatedTime = CURRENT_TIMESTAMP "
+                "WHERE ((senderUsername = " + W.quote(senderUsername) + " AND receiverUsername = " + W.quote(receiverUsername) + ") "
+                "   OR (senderUsername = " + W.quote(receiverUsername) + " AND receiverUsername = " + W.quote(senderUsername) + ")) "
+                "AND state IN ('rejected', 'deleted');"
             );
             W.commit();
-            std::cout << "Friend request sent to '" << receiverUsername << "'.\n";
+            std::cout << "Friend request re-sent to '" << receiverUsername << "'.\n";
+            return;
         }
+
+        // Step 2: Check if a pending or accepted request already exists
+        pqxx::result existing = W.exec(
+            "SELECT 1 FROM \"Friends\" "
+            "WHERE (senderUsername = " + W.quote(senderUsername) + " AND receiverUsername = " + W.quote(receiverUsername) + ") "
+            "OR (senderUsername = " + W.quote(receiverUsername) + " AND receiverUsername = " + W.quote(senderUsername) + ");"
+        );
+
+        if (!existing.empty()) {
+            std::cout << "A friend request already exists or you're already friends.\n";
+            return;
+        }
+
+        // Step 3: Insert new friend request
+        W.exec(
+            "INSERT INTO \"Friends\" (senderUsername, receiverUsername, state, requestTime, updatedTime) "
+            "VALUES (" + W.quote(senderUsername) + ", " + W.quote(receiverUsername) + ", 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);"
+        );
+        W.commit();
+        std::cout << "Friend request sent to '" << receiverUsername << "'.\n";
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
@@ -68,22 +77,22 @@ void sendFriendRequest(int userID) {
 }
 
 
-void viewIncomingFriendRequests(int userID){
+void viewIncomingFriendRequests(const std::string& username) {
     try {
         pqxx::connection C(connect_info);
         pqxx::work W(C);
         
         pqxx::result R = W.exec(
-            "SELECT senderID, requestTime "
-            "FROM Friends "
-            "WHERE receiverID = " + W.quote(userID) + " AND state = 'pending';"
+            "SELECT senderUsername, requestTime "
+            "FROM \"Friends\" "
+            "WHERE receiverUsername = " + W.quote(username) + " AND state = 'pending';"
         );
 
         std::cout << "Incoming Friend Requests:\n";
         for (const auto& row : R) {
-            int senderID = row["senderID"].as<int>();
+            std::string sender = row["senderUsername"].as<std::string>();
             std::string requestTime = row["requestTime"].c_str();
-            std::cout << "From User ID: " << senderID << " at " << requestTime << "\n";
+            std::cout << "From: " << sender << " at " << requestTime << "\n";
         }
 
         W.commit();
@@ -93,22 +102,22 @@ void viewIncomingFriendRequests(int userID){
 }
 
 
-void viewOutgoingFriendRequests(int userID){
+void viewOutgoingFriendRequests(const std::string& username) {
     try {
         pqxx::connection C(connect_info);
         pqxx::work W(C);
 
         pqxx::result R = W.exec(
-            "SELECT receiverID, requestTime "
-            "FROM Friends "
-            "WHERE senderID = " + W.quote(userID) + " AND state = 'pending';"
+            "SELECT receiverUsername, requestTime "
+            "FROM \"Friends\" "
+            "WHERE senderUsername = " + W.quote(username) + " AND state = 'pending';"
         );
 
         std::cout << "Outgoing Friend Requests:\n";
         for (const auto& row : R) {
-            int receiverID = row["receiverID"].as<int>();
+            std::string receiver = row["receiverUsername"].as<std::string>();
             std::string requestTime = row["requestTime"].c_str();
-            std::cout << "To User ID: " << receiverID << " at " << requestTime << "\n";
+            std::cout << "To: " << receiver << " at " << requestTime << "\n";
         }
 
         W.commit();
@@ -118,29 +127,27 @@ void viewOutgoingFriendRequests(int userID){
 }
 
 
-void viewFriends(int userID){
+void viewFriends(const std::string& username) {
     try {
         pqxx::connection C(connect_info);
         pqxx::work W(C);
-        
+
         pqxx::result R = W.exec(
             "SELECT CASE "
-            "         WHEN senderID = " + W.quote(userID) + " THEN receiverID "
-            "         ELSE senderID "
-            "       END AS friendID, requestTime, updatedTime "
-            "FROM Friends "
-            "WHERE (senderID = " + W.quote(userID) + " OR receiverID = " + W.quote(userID) + ") "
+            "         WHEN senderUsername = " + W.quote(username) + " THEN receiverUsername "
+            "         ELSE senderUsername "
+            "       END AS friend, requestTime, updatedTime "
+            "FROM \"Friends\" "
+            "WHERE (senderUsername = " + W.quote(username) + " OR receiverUsername = " + W.quote(username) + ") "
             "AND state = 'accepted';"
         );
 
         std::cout << "Friends:\n";
         for (const auto& row : R) {
-            int friendID = row["friendID"].as<int>();
+            std::string friendName = row["friend"].as<std::string>();
             std::string requestTime = row["requestTime"].c_str();
             std::string updatedTime = row["updatedTime"].c_str();
-            std::cout << "Friend ID: " << friendID 
-                      << " | Requested: " << requestTime 
-                      << " | Updated: " << updatedTime << "\n";
+            std::cout << "Friend: " << friendName << " | Requested: " << requestTime << " | Accepted: " << updatedTime << "\n";
         }
 
         W.commit();
@@ -150,7 +157,7 @@ void viewFriends(int userID){
 }
 
 
-void acceptFriendRequest(int userID){
+void acceptFriendRequest(const std::string& receiverUsername) {
     std::string senderUsername;
     std::cout << "Enter the username of the user you want to accept: ";
     std::cin >> senderUsername;
@@ -159,38 +166,28 @@ void acceptFriendRequest(int userID){
         pqxx::connection C(connect_info);
         pqxx::work W(C);
 
-        // Step 1: Get senderID from username
         pqxx::result res = W.exec(
-            "SELECT id FROM \"User\" WHERE username = " + W.quote(senderUsername) + ";"
+            "SELECT 1 FROM \"Friends\" "
+            "WHERE senderUsername = " + W.quote(senderUsername) + 
+            " AND receiverUsername = " + W.quote(receiverUsername) +
+            " AND state = 'pending';"
         );
 
         if (res.empty()) {
-            std::cout << "User '" << senderUsername << "' not found.\n";
+            std::cout << "No pending friend request from '" << senderUsername << "'.\n";
             return;
         }
 
-        int senderID = res[0]["id"].as<int>();
-
-        // Step 2: Check if there is a pending request from sender to receiver (userID)
-        pqxx::result req = W.exec(
-            "SELECT * FROM Friends "
-            "WHERE senderID = " + W.quote(senderID) + " AND receiverID = " + W.quote(userID) + " AND state = 'pending';"
-        );
-
-        if (req.empty()) {
-            std::cout << "No pending friend request from user '" << senderUsername << "'.\n";
-            return;
-        }
-
-        // Step 3: Accept the request
         W.exec0(
-            "UPDATE Friends "
+            "UPDATE \"Friends\" "
             "SET state = 'accepted', updatedTime = CURRENT_TIMESTAMP "
-            "WHERE senderID = " + W.quote(senderID) + " AND receiverID = " + W.quote(userID) + " AND state = 'pending';"
+            "WHERE senderUsername = " + W.quote(senderUsername) + 
+            " AND receiverUsername = " + W.quote(receiverUsername) + 
+            " AND state = 'pending';"
         );
 
         W.commit();
-        std::cout << "Friend request accepted!\n";
+        std::cout << "Friend request from '" << senderUsername << "' accepted!\n";
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
@@ -198,49 +195,37 @@ void acceptFriendRequest(int userID){
 }
 
 
-void rejectFriendRequest(int userID) {
+void rejectFriendRequest(const std::string& receiverUsername) {
     std::string senderUsername;
-    std::cout << "Enter the username of the person who sent the friend request: ";
+    std::cout << "Enter the username of the user you want to reject: ";
     std::cin >> senderUsername;
 
     try {
         pqxx::connection C(connect_info);
         pqxx::work W(C);
 
-        // Step 1: Get senderID from username
         pqxx::result res = W.exec(
-            "SELECT id FROM \"User\" WHERE username = " + W.quote(senderUsername) + ";"
-        );
-
-        if (res.empty()) {
-            std::cout << "User '" << senderUsername << "' not found.\n";
-            return;
-        }
-
-        int senderID = res[0]["id"].as<int>();
-
-        // Step 2: Check for a pending friend request
-        pqxx::result check = W.exec(
-            "SELECT 1 FROM Friends "
-            "WHERE senderID = " + W.quote(senderID) +
-            " AND receiverID = " + W.quote(userID) +
+            "SELECT 1 FROM \"Friends\" "
+            "WHERE senderUsername = " + W.quote(senderUsername) + 
+            " AND receiverUsername = " + W.quote(receiverUsername) +
             " AND state = 'pending';"
         );
 
-        if (check.empty()) {
-            std::cout << "No pending friend request from user '" << senderUsername << "'.\n";
-        } else {
-            // Step 3: Reject the request
-            W.exec0(
-                "UPDATE Friends "
-                "SET state = 'rejected', updatedTime = CURRENT_TIMESTAMP "
-                "WHERE senderID = " + W.quote(senderID) +
-                " AND receiverID = " + W.quote(userID) +
-                " AND state = 'pending';"
-            );
-            W.commit();
-            std::cout << "Friend request from '" << senderUsername << "' rejected.\n";
+        if (res.empty()) {
+            std::cout << "No pending friend request from '" << senderUsername << "'.\n";
+            return;
         }
+
+        W.exec0(
+            "UPDATE \"Friends\" "
+            "SET state = 'rejected', updatedTime = CURRENT_TIMESTAMP "
+            "WHERE senderUsername = " + W.quote(senderUsername) + 
+            " AND receiverUsername = " + W.quote(receiverUsername) + 
+            " AND state = 'pending';"
+        );
+
+        W.commit();
+        std::cout << "Friend request from '" << senderUsername << "' rejected.\n";
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
@@ -248,50 +233,41 @@ void rejectFriendRequest(int userID) {
 }
 
 
-void deleteFriend(int userID) {
-    std::string friendUsername;
-    std::cout << "Enter the username of the friend you want to delete: ";
-    std::cin >> friendUsername;
+void deleteFriend(const std::string& username) {
+    std::string otherUsername;
+    std::cout << "Enter the username of the friend to delete: ";
+    std::cin >> otherUsername;
 
     try {
         pqxx::connection C(connect_info);
         pqxx::work W(C);
 
-        // Step 1: Get the friend's user ID from their username
-        pqxx::result res = W.exec(
-            "SELECT id FROM \"User\" WHERE username = " + W.quote(friendUsername) + ";"
-        );
-
-        if (res.empty()) {
-            std::cout << "User '" << friendUsername << "' not found.\n";
-            return;
-        }
-
-        int friendID = res[0]["id"].as<int>();
-
-        // Step 2: Check if there is an existing 'accepted' friendship
+        // Step 1: Check if a friendship exists (in either direction)
         pqxx::result check = W.exec(
-            "SELECT 1 FROM Friends "
-            "WHERE ((senderID = " + W.quote(userID) + " AND receiverID = " + W.quote(friendID) + ") "
-            "OR (senderID = " + W.quote(friendID) + " AND receiverID = " + W.quote(userID) + ")) "
-            "AND state = 'accepted';"
+            "SELECT 1 FROM \"Friends\" "
+            "WHERE (senderUsername = " + W.quote(username) + " AND receiverUsername = " + W.quote(otherUsername) + ") "
+            "   OR (senderUsername = " + W.quote(otherUsername) + " AND receiverUsername = " + W.quote(username) + ");"
         );
 
         if (check.empty()) {
-            std::cout << "No accepted friendship between you and '" << friendUsername << "'.\n";
-        } else {
-            // Step 3: Mark the friendship as 'deleted'
-            W.exec0(
-                "UPDATE Friends "
-                "SET state = 'deleted', updatedTime = CURRENT_TIMESTAMP "
-                "WHERE (senderID = " + W.quote(userID) + " AND receiverID = " + W.quote(friendID) + " AND state = 'accepted') "
-                "OR (senderID = " + W.quote(friendID) + " AND receiverID = " + W.quote(userID) + " AND state = 'accepted');"
-            );
-            W.commit();
-            std::cout << "Friendship with '" << friendUsername << "' has been deleted.\n";
+            std::cout << "You are not friends with '" << otherUsername << "'.\n";
+            return;
         }
+
+        // Step 2: Delete the friendship
+        W.exec0(
+            "UPDATE \"Friends\" "
+            "SET state = 'deleted', updatedTime = CURRENT_TIMESTAMP "
+            "WHERE (senderUsername = " + W.quote(username) + " AND receiverUsername = " + W.quote(otherUsername) + ") "
+            "   OR (senderUsername = " + W.quote(otherUsername) + " AND receiverUsername = " + W.quote(username) + ");"
+        );
+
+        W.commit();
+        std::cout << "Friendship with '" << otherUsername << "' has been deleted.\n";
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
     }
 }
+
+
