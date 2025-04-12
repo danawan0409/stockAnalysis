@@ -9,5 +9,6 @@ void withdrawCash(const std::string& ownerUsername);
 void buyStock(const std::string& ownerUsername);
 void sellStock(const std::string& ownerUsername);
 void viewPortfolioHistorical(const std::string& ownerUsername);
+void viewPortfolioPrediction(const std::string& ownerUsername)
 
 #endif

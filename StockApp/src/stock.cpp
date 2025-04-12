@@ -60,3 +60,35 @@ std::vector<std::pair<std::string, double>> downsampleData(
 
     return result;
 }
+
+std::vector<std::pair<std::string, double>> predictFuturePrices(
+    const std::vector<std::pair<std::string, double>>& historical, int predictDays = 14, int windowSize = 5) {
+    
+    std::vector<std::pair<std::string, double>> predictions;
+    if (historical.size() < windowSize) return predictions;
+
+    std::vector<double> recentPrices;
+    for (int i = historical.size() - windowSize; i < historical.size(); ++i) {
+        recentPrices.push_back(historical[i].second);
+    }
+
+    std::tm start{};
+    std::istringstream ss("2018-02-08");
+    ss >> std::get_time(&start, "%Y-%m-%d");
+
+    for (int i = 0; i < predictDays; ++i) {
+        double sum = 0;
+        for (int j = 0; j < windowSize; ++j) sum += recentPrices[recentPrices.size() - windowSize + j];
+        double predicted = sum / windowSize;
+        recentPrices.push_back(predicted);
+
+        char buf[11];
+        std::strftime(buf, sizeof(buf), "%Y-%m-%d", &start);
+        predictions.emplace_back(std::string(buf), predicted);
+
+        start.tm_mday++;
+        mktime(&start);
+    }
+
+    return predictions;
+}

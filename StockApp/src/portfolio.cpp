@@ -685,3 +685,91 @@ void viewPortfolioHistorical(const std::string& ownerUsername) {
         std::cerr << "Error: " << e.what() << "\n";
     }
 }
+
+void viewPortfolioPrediction(const std::string& ownerUsername) {
+    try {
+        pqxx::connection C(connect_info);
+        pqxx::nontransaction N(C);
+
+        std::string queryPortfolio =
+            "SELECT name FROM Portfolio WHERE ownerUsername = " + N.quote(ownerUsername) + ";";
+        pqxx::result portfolios = N.exec(queryPortfolio);
+
+        if (portfolios.empty()) {
+            std::cout << "You have no portfolios.\n";
+            return;
+        }
+
+        std::cout << "Select a portfolio:\n";
+        for (size_t i = 0; i < portfolios.size(); ++i) {
+            std::cout << i + 1 << ". " << portfolios[i]["name"].as<std::string>() << "\n";
+        }
+
+        int pchoice;
+        std::cin >> pchoice;
+        if (pchoice < 1 || pchoice > static_cast<int>(portfolios.size())) {
+            std::cout << "Invalid selection.\n";
+            return;
+        }
+
+        std::string portfolioName = portfolios[pchoice - 1]["name"].as<std::string>();
+
+        std::string queryHoldings =
+            "SELECT stockID FROM PortfolioHasStock WHERE portfolioName = " + N.quote(portfolioName) +
+            " AND ownerUsername = " + N.quote(ownerUsername) + ";";
+        pqxx::result holdings = N.exec(queryHoldings);
+
+        if (holdings.empty()) {
+            std::cout << "No stocks in this portfolio.\n";
+            return;
+        }
+
+        std::cout << "Select a stock to predict:\n";
+        for (size_t i = 0; i < holdings.size(); ++i) {
+            std::cout << i + 1 << ". " << holdings[i]["stockid"].as<std::string>() << "\n";
+        }
+
+        int schoice;
+        std::cin >> schoice;
+        if (schoice < 1 || schoice > static_cast<int>(holdings.size())) {
+            std::cout << "Invalid stock choice.\n";
+            return;
+        }
+
+        std::string symbol = holdings[schoice - 1]["stockid"].as<std::string>();
+
+        std::string sql =
+            "SELECT timestamp, close FROM StockHistory "
+            "WHERE symbol = " + N.quote(symbol) +
+            " AND timestamp <= DATE '2018-02-07' "
+            "ORDER BY timestamp;";
+        pqxx::result R = N.exec(sql);
+
+        std::vector<std::pair<std::string, double>> history;
+        for (const auto& row : R) {
+            std::string date = row["timestamp"].as<std::string>();
+            double close = row["close"].as<double>();
+            history.emplace_back(date, close);
+        }
+
+        if (history.empty()) {
+            std::cout << "No historical data available.\n";
+            return;
+        }
+
+        // predict future prices
+        std::cout << "Enter number of days to predict into the future (range: 1-365 days): ";
+        int days;
+        std::cin >> days;
+        if (days <= 0 || days > 365) {
+            std::cout << "Please enter a number between 1 and 365.\n";
+            return;
+        }
+
+        auto predicted = predictFuturePrices(history, days);
+        drawASCII(predicted);
+
+    } catch (const std::exception& e) {
+        std::cerr << "Prediction Error: " << e.what() << "\n";
+    }
+}
