@@ -5,6 +5,9 @@
 #include "friend.h"
 #include "stocklist.h"
 
+void friendMenu();
+void stockListMenu();
+
 int main() {
     int choice;
     bool running = true;
@@ -162,13 +165,15 @@ void stockListMenu(){
                 break;
             case 7:
                 addReviewStockList(currentUsername); 
+                break;        
+            case 8:
+                editReviewStockList(currentUsername); 
                 break;
-            case 13:
-                depositCash(currentUsername);
+            case 9:
+                deleteReviewStockList(currentUsername); 
                 break;
-            case 14:
-                withdrawCash(currentUsername);
-                break;            
+            case 10:
+                return;        
             default:
                 std::cout << "Invalid choice. Try again.\n";
         }
