@@ -67,7 +67,7 @@ void viewPortfolios(const std::string& ownerUsername) {
         }
 
         int choice;
-        std::cout << "Enter portfolio number to view holdings: ";
+        std::cout << "Enter portfolio number to view market value: ";
         std::cin >> choice;
 
         if (choice < 1 || choice > static_cast<int>(portfolios.size())) {
@@ -76,6 +76,7 @@ void viewPortfolios(const std::string& ownerUsername) {
         }
 
         std::string selectedPortfolio = portfolios[choice - 1]["name"].as<std::string>();
+        double cash = portfolios[choice - 1]["cashaccount"].as<double>();
 
         std::string stockQuery =
             "SELECT phs.stockID, phs.quantity, s.close "
@@ -86,10 +87,16 @@ void viewPortfolios(const std::string& ownerUsername) {
 
         pqxx::result stocks = N.exec(stockQuery);
 
-        std::cout << "\nHoldings in \"" << selectedPortfolio << "\":\n";
+        double totalStockValue = 0.0;
+
+        std::cout << "\nPortfolio: " << selectedPortfolio << "\n";
+        std::cout << "----------------------------------------\n";
+        std::cout << "Cash: $" << std::fixed << std::setprecision(2) << cash << "\n\n";
+
         if (stocks.empty()) {
             std::cout << "(no stocks held)\n";
         } else {
+            std::cout << "Holdings:\n";
             std::cout << std::left << std::setw(10) << "Symbol"
                       << std::setw(10) << "Quantity"
                       << std::setw(12) << "Price"
@@ -101,6 +108,7 @@ void viewPortfolios(const std::string& ownerUsername) {
                 int qty = stock["quantity"].as<int>();
                 double price = stock["close"].as<double>();
                 double value = qty * price;
+                totalStockValue += value;
 
                 std::cout << std::left << std::setw(10) << symbol
                           << std::setw(10) << qty
@@ -108,7 +116,11 @@ void viewPortfolios(const std::string& ownerUsername) {
                           << "$" << std::setw(11) << std::fixed << std::setprecision(2) << value
                           << "\n";
             }
+            std::cout << "\nTotal Stock Value: $" << std::fixed << std::setprecision(2) << totalStockValue << "\n";
         }
+        std::cout << "----------------------------------------\n";
+        std::cout << "Portfolio Market Value: $" << std::fixed << std::setprecision(2)
+                  << (cash + totalStockValue) << "\n";
     } catch (const std::exception& e) {
         std::cerr << "Error retrieving portfolios: " << e.what() << std::endl;
     }
