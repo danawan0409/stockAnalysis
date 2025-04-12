@@ -237,7 +237,7 @@ void findMatrix(const std::string& matrixType) {
             }
         }
 
-        drawMatrix(symbols, matrix);
+        printMatrix(symbols, matrix);
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
