@@ -171,10 +171,10 @@ void viewStockLists(const std::string& ownerUsername) {
             }
 
             std::cout << "\nUse the arrow keys to navigate (Right to next page, Left to previous page).\n";
-std::cout << "Type 'exit' to stop toggling.\n";
+            std::cout << "Type 'e' to stop toggling.\n";
 
-// Get user input
-char key = getch();
+            // Get user input
+            char key = getch();
             if (key == 27) { // Arrow keys start with ESC
                 char secondKey = getch();
                 char thirdKey = getch();
@@ -186,11 +186,7 @@ char key = getch();
                     }
                 }
             } else if (key == 'e') {
-                std::string remaining;
-                std::getline(std::cin, remaining);  // Read the rest of the line
-                if (remaining == "xit") {
-                    running = false;
-                }
+                running = false;
             }
         }
 
