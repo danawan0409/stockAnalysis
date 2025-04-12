@@ -648,7 +648,7 @@ void viewPortfolioHistorical(const std::string& ownerUsername) {
         }
 
         if (rangeChoice >= 3) {
-            drawASCII(downsampleData(date_price));
+            drawASCII(downsampleData(date_price, 30));
         } else {
             drawASCII(date_price);
         }        

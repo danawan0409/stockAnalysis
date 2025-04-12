@@ -47,7 +47,7 @@ void drawASCII(const std::vector<std::pair<std::string, double>>& data) {
 }
 
 std::vector<std::pair<std::string, double>> downsampleData(
-    const std::vector<std::pair<std::string, double>>& data, size_t maxPoints = 30) {
+    const std::vector<std::pair<std::string, double>>& data, size_t maxPoints) {
 
     if (data.size() <= maxPoints) return data;
 
