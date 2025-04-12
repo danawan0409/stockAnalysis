@@ -201,3 +201,51 @@ CREATE TABLE CachedStockStatistics(
     last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- Track when the cache was last updated
     PRIMARY KEY (symbol)
 );
+
+CREATE TABLE CachedMatrix (
+    symbol1 VARCHAR(10),
+    symbol2 VARCHAR(10),
+    correlation NUMERIC(15, 6),
+    covariance NUMERIC(15, 6),
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (symbol1, symbol2)
+);
+
+
+INSERT INTO CachedMatrix (symbol1, symbol2, correlation, covariance, last_updated)
+WITH stock_prices AS (
+    SELECT symbol, timestamp, close
+    FROM StockHistory
+),
+returns AS (
+    SELECT 
+        symbol,
+        timestamp,
+        (close - LAG(close) OVER (PARTITION BY symbol ORDER BY timestamp)) / 
+        NULLIF(LAG(close) OVER (PARTITION BY symbol ORDER BY timestamp), 0) AS daily_return
+    FROM stock_prices
+),
+valid_returns AS (
+    SELECT * FROM returns WHERE daily_return IS NOT NULL
+),
+paired_returns AS (
+    SELECT 
+        a.symbol AS symbol1,
+        b.symbol AS symbol2,
+        a.daily_return AS ret1,
+        b.daily_return AS ret2
+    FROM valid_returns a
+    JOIN valid_returns b ON a.timestamp = b.timestamp
+)
+SELECT 
+    symbol1,
+    symbol2,
+    CORR(ret1, ret2) AS correlation,
+    COVAR_POP(ret1, ret2) AS covariance,
+    CURRENT_TIMESTAMP
+FROM paired_returns
+GROUP BY symbol1, symbol2
+ON CONFLICT (symbol1, symbol2) DO UPDATE
+SET correlation = EXCLUDED.correlation,
+    covariance = EXCLUDED.covariance,
+    last_updated = CURRENT_TIMESTAMP;

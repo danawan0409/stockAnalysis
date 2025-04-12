@@ -145,110 +145,82 @@ bool hasAccessToStockList(pqxx::work& W, const std::string& user, const std::str
     return !res.empty();
 }
 
-void drawMatrix(const json& matrix) {
-    std::vector<std::string> labels;
-    for (const auto& [key, _] : matrix.items()) {
-        labels.push_back(key);
-    }
-
-    std::cout << std::setw(10) << " ";
-    for (const auto& label : labels) {
-        std::cout << std::setw(10) << label;
-    }
-    std::cout << "\n";
-
-    for (const auto& row : labels) {
-        std::cout << std::setw(10) << row;
-        for (const auto& col : labels) {
-            double val = matrix[row][col];
-            std::cout << std::setw(10) << std::fixed << std::setprecision(2) << val;
-        }
-        std::cout << "\n";
-    }
-}
-
 void findMatrix(const std::string& matrixType) {
-    std::string owner, list;
-    std::cout << "Enter stock list owner: ";
-    std::cin >> owner;
-    std::cout << "Enter stock list name: ";
-    std::getline(std::cin >> std::ws, list);
+    std::string ownerUsername, listOrPortfolioName;
+    char type;
+
+    std::cout << "Do you want to find the " << matrixType << " matrix for a portfolio (p) or stock list (s)? ";
+    std::cin >> type;
 
     try {
-        pqxx::connection C(connect_info);
+        pqxx::connection C("dbname=yourdbname user=youruser password=yourpass host=yourhost");
         pqxx::work W(C);
 
-        // Check access
-        if (!hasAccessToStockList(W, currentUsername, owner, list)) {
-            std::cout << "Access denied.\n";
+        std::vector<std::string> symbols;
+
+        if (type == 'p' || type == 'P') {
+            std::cout << "Enter your username: ";
+            std::cin >> ownerUsername;
+            std::cout << "Enter the portfolio name: ";
+            std::cin.ignore();
+            std::getline(std::cin, listOrPortfolioName);
+
+            auto r = W.exec("SELECT 1 FROM Portfolio WHERE name = " + W.quote(listOrPortfolioName) +
+                            " AND ownerUsername = " + W.quote(ownerUsername));
+            if (r.empty()) {
+                std::cout << "Portfolio not found.\n";
+                return;
+            }
+
+            auto rows = W.exec("SELECT stockID FROM PortfolioHasStock WHERE portfolioName = " +
+                               W.quote(listOrPortfolioName) + " AND ownerUsername = " + W.quote(ownerUsername));
+            for (const auto& row : rows)
+                symbols.push_back(row["stockID"].c_str());
+
+        } else if (type == 's' || type == 'S') {
+            std::cout << "Enter your username: ";
+            std::cin >> ownerUsername;
+            std::cout << "Enter the stock list name: ";
+            std::cin.ignore();
+            std::getline(std::cin, listOrPortfolioName);
+
+            auto r = W.exec("SELECT visibility FROM StockList WHERE name = " + W.quote(listOrPortfolioName) +
+                            " AND ownerUsername = " + W.quote(ownerUsername));
+            if (r.empty()) {
+                std::cout << "Stock list not found.\n";
+                return;
+            }
+
+            auto visibility = r[0]["visibility"].c_str();
+            if (visibility == std::string("private") && ownerUsername != ownerUsername) {
+                std::cout << "You do not have access to this stock list.\n";
+                return;
+            }
+
+            auto rows = W.exec("SELECT stockID FROM StockListHasStock WHERE stockListName = " +
+                               W.quote(listOrPortfolioName) + " AND ownerUsername = " + W.quote(ownerUsername));
+            for (const auto& row : rows)
+                symbols.push_back(row["stockID"].c_str());
+        } else {
+            std::cout << "Invalid choice.\n";
             return;
         }
 
-        // Try cached matrix
-        std::string cacheQuery =
-            "SELECT matrixData FROM CachedMatrix WHERE stockListName = " + W.quote(list) +
-            " AND ownerUsername = " + W.quote(owner) +
-            " AND matrixType = " + W.quote(matrixType) + ";";
+        // Load matrix values
+        std::map<std::string, std::map<std::string, double>> matrix;
+        for (const auto& s1 : symbols) {
+            for (const auto& s2 : symbols) {
+                pqxx::result result = W.exec(
+                    "SELECT " + W.esc(matrixType) + " FROM CachedMatrix "
+                    "WHERE (symbol1 = " + W.quote(s1) + " AND symbol2 = " + W.quote(s2) + ") "
+                    "   OR (symbol1 = " + W.quote(s2) + " AND symbol2 = " + W.quote(s1) + ")");
 
-        pqxx::result cached = W.exec(cacheQuery);
-        if (!cached.empty()) {
-            json matrix = json::parse(cached[0]["matrixdata"].c_str());
-            std::cout << matrixType << " matrix (cached):\n";
-            drawMatrix(matrix);
-            return;
+                double value = result.empty() ? 0.0 : result[0][matrixType].as<double>();
+                matrix[s1][s2] = value;
+            }
         }
 
-        // Compute matrix in SQL
-        std::string sql =
-            "WITH symbols AS ("
-            "  SELECT stockID FROM StockListHasStock "
-            "  WHERE stockListName = " + W.quote(list) + " AND ownerUsername = " + W.quote(owner) +
-            "), "
-            "prices AS ("
-            "  SELECT symbol, timestamp, close "
-            "  FROM StockHistory "
-            "  WHERE symbol IN (SELECT stockID FROM symbols)"
-            "), "
-            "pivoted AS ("
-            "  SELECT timestamp, jsonb_object_agg(symbol, close) AS row "
-            "  FROM prices GROUP BY timestamp"
-            "), "
-            "unpacked AS ("
-            "  SELECT (row ->> key)::text AS symbol, "
-            "         (row ->> key)::numeric AS value, timestamp "
-            "  FROM pivoted, jsonb_each(row)"
-            "), "
-            "matrix AS ("
-            "  SELECT a.symbol AS sym1, b.symbol AS sym2, "
-                + std::string(matrixType == "correlation" ? "corr" : "covar_pop") +
-            "(a.value, b.value) AS val "
-            "  FROM unpacked a JOIN unpacked b ON a.timestamp = b.timestamp "
-            "  GROUP BY sym1, sym2"
-            ") "
-            "SELECT jsonb_object_agg(sym1, pairs) AS matrix FROM ("
-            "  SELECT sym1, jsonb_object_agg(sym2, val) AS pairs FROM matrix GROUP BY sym1"
-            ") AS result;";
-
-
-        pqxx::result res = W.exec(sql);
-        if (res.empty()) {
-            std::cout << "Matrix calculation returned nothing.\n";
-            return;
-        }
-
-        json matrix = json::parse(res[0]["matrix"].c_str());
-
-        // Insert into cache
-        std::string insertQuery =
-            "INSERT INTO CachedMatrix (stockListName, ownerUsername, matrixType, matrixData) VALUES (" +
-            W.quote(list) + ", " + W.quote(owner) + ", " + W.quote(matrixType) + ", " + W.quote(matrix.dump()) + ") "
-            "ON CONFLICT (stockListName, ownerUsername, matrixType) DO UPDATE SET "
-            "matrixData = EXCLUDED.matrixData, lastUpdated = CURRENT_TIMESTAMP;";
-        W.exec(insertQuery);
-        W.commit();
-
-        std::cout << matrixType << " matrix:\n";
-        drawMatrix(matrix);
+        printMatrix(symbols, matrix);
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
