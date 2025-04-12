@@ -107,6 +107,7 @@ void viewIncomingFriendRequests(const std::string& username) {
     }
 }
 
+
 void viewOutgoingFriendRequests(const std::string& username) {
     try {
         pqxx::connection C(connect_info);
@@ -130,6 +131,7 @@ void viewOutgoingFriendRequests(const std::string& username) {
         std::cerr << "Error: " << e.what() << "\n";
     }
 }
+
 
 void viewFriends(const std::string& username) {
     try {
@@ -159,6 +161,7 @@ void viewFriends(const std::string& username) {
         std::cerr << "Error: " << e.what() << "\n";
     }
 }
+
 
 void acceptFriendRequest(const std::string& receiverUsername) {
     std::string senderUsername;
@@ -196,6 +199,7 @@ void acceptFriendRequest(const std::string& receiverUsername) {
     }
 }
 
+
 void rejectFriendRequest(const std::string& receiverUsername) {
     std::string senderUsername;
     std::cout << "Enter the username of the user you want to reject: ";
@@ -231,6 +235,7 @@ void rejectFriendRequest(const std::string& receiverUsername) {
         std::cerr << "Error: " << e.what() << "\n";
     }
 }
+
 
 void deleteFriend(const std::string& username) {
     std::string otherUsername;
