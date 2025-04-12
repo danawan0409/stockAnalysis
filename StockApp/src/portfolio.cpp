@@ -76,7 +76,7 @@ void viewPortfolios(const std::string& ownerUsername) {
             return;
         }
 
-        if (choice < 1 || choice > static_cast<int>(portfolios.size())) {
+        if (choice < 0 || choice > static_cast<int>(portfolios.size())) {
             std::cout << "Invalid selection.\n";
             return;
         }
@@ -401,9 +401,13 @@ void buyStock(const std::string& ownerUsername) {
         std::cout << "Current price of " << stockSymbol << ": $" << price << "\n";
 
         int quantity;
-        std::cout << "Enter quantity to buy: ";
+        std::cout << "Enter quantity to buy (0 to cancel): ";
         std::cin >> quantity;
-        if (quantity <= 0) {
+        if (quantity == 0) {
+            std::cout << "Buy operation canceled.\n";
+            return;
+        }
+        if (quantity < 0) {
             std::cout << "Quantity must be positive.\n";
             return;
         }
@@ -521,9 +525,13 @@ void sellStock(const std::string& ownerUsername) {
         std::cout << "You currently own " << owned << " shares.\n";
 
         int quantity;
-        std::cout << "Enter quantity to sell: ";
+        std::cout << "Enter quantity to sell (0 to cancel): ";
         std::cin >> quantity;
-        if (quantity <= 0 || quantity > owned) {
+        if (quantity == 0) {
+            std::cout << "Sell operation canceled.\n";
+            return;
+        }
+        if (quantity < 0 || quantity > owned) {
             std::cout << "Invalid quantity. You only have " << owned << " shares.\n";
             return;
         }
