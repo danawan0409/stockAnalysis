@@ -5,6 +5,7 @@
 #include "friend.h"
 #include "stocklist.h"
 
+void portfolioMenu();
 void friendMenu();
 void stockListMenu();
 
