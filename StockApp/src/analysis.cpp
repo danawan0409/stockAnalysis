@@ -29,7 +29,6 @@ void findStatistic(const std::string& statName) {
                 "SELECT 1 FROM Portfolio WHERE name = " + W.quote(name) +
                 " AND ownerUsername = " + W.quote(currentUsername) + ";"
             );
-
             if (res.empty()) {
                 std::cout << "Portfolio not found.\n";
                 return;
@@ -43,17 +42,15 @@ void findStatistic(const std::string& statName) {
                 " AND ownerUsername = " + W.quote(currentUsername) +
                 " AND stockID = " + W.quote(symbol) + ";"
             );
-
             if (inPortfolio.empty()) {
                 std::cout << "Stock is not in the portfolio.\n";
                 return;
             }
 
             valid = true;
-
         } else if (choice == "2") {
-            std::cout << "Enter the owner of the stock list: ";
             std::string owner;
+            std::cout << "Enter the owner of the stock list: ";
             std::cin >> owner;
             std::cout << "Enter the name of the stock list: ";
             std::cin.ignore();
@@ -63,7 +60,6 @@ void findStatistic(const std::string& statName) {
                 "SELECT 1 FROM StockList WHERE name = " + W.quote(name) +
                 " AND ownerUsername = " + W.quote(owner) + ";"
             );
-
             if (res.empty()) {
                 std::cout << "Stock list not found.\n";
                 return;
@@ -77,7 +73,6 @@ void findStatistic(const std::string& statName) {
                 " AND receiverUsername = " + W.quote(currentUsername) +
                 " AND stockListName = " + W.quote(name) + "));"
             );
-
             if (access.empty()) {
                 std::cout << "You do not have access to this stock list.\n";
                 return;
@@ -91,7 +86,6 @@ void findStatistic(const std::string& statName) {
                 " AND ownerUsername = " + W.quote(owner) +
                 " AND stockID = " + W.quote(symbol) + ";"
             );
-
             if (inList.empty()) {
                 std::cout << "Stock is not in the stock list.\n";
                 return;
@@ -104,17 +98,67 @@ void findStatistic(const std::string& statName) {
         }
 
         if (valid) {
-            pqxx::result result = W.exec(
-                "SELECT " + statName + " FROM CachedStockStatistics WHERE symbol = " + W.quote(symbol) + ";"
-            );
+            std::cout << "Use default interval? (1 for yes / 2 for no): ";
+            std::string intervalChoice;
+            std::cin >> intervalChoice;
 
-            if (result.empty()) {
-                std::cout << "Statistic not cached yet for stock " << symbol << ".\n";
+            if (intervalChoice == "1") {
+                pqxx::result result = W.exec(
+                    "SELECT " + statName + " FROM CachedStockStatistics WHERE symbol = " + W.quote(symbol) + ";"
+                );
+
+                if (result.empty()) {
+                    std::cout << "Statistic not cached yet for stock " << symbol << ".\n";
+                } else {
+                    std::cout << statName << " for " << symbol << " is: " << result[0][0].as<std::string>() << "\n";
+                }
+
+            } else if (intervalChoice == "2") {
+                std::string start, end;
+                std::cout << "Enter start date (YYYY-MM-DD): ";
+                std::cin >> start;
+                std::cout << "Enter end date (YYYY-MM-DD): ";
+                std::cin >> end;
+
+                std::string query = R"(
+                    WITH prices AS (
+                        SELECT timestamp, close
+                        FROM StockHistory
+                        WHERE symbol = )" + W.quote(symbol) + R"( AND timestamp BETWEEN )" + W.quote(start) + R"( AND )" + W.quote(end) + R"(
+                    ),
+                    returns AS (
+                        SELECT (close - LAG(close) OVER (ORDER BY timestamp)) / NULLIF(LAG(close) OVER (ORDER BY timestamp), 0) AS ret
+                        FROM prices
+                    )
+                    SELECT
+                        )" + (statName == "variation"
+                            ? "VAR_POP(ret)"
+                            : "COVAR_POP(ret, mr.market_return)") + R"( AS result
+                    FROM returns r )" +
+                    (statName == "beta"
+                        ? R"(
+                        JOIN (
+                            SELECT timestamp, AVG((close - LAG(close) OVER (PARTITION BY symbol ORDER BY timestamp)) / NULLIF(LAG(close) OVER (PARTITION BY symbol ORDER BY timestamp), 0)) AS market_return
+                            FROM StockHistory
+                            WHERE timestamp BETWEEN )" + W.quote(start) + " AND " + W.quote(end) + R"(
+                            GROUP BY timestamp
+                        ) mr ON r.timestamp = mr.timestamp
+                    )"
+                        : "") + ";";
+
+                pqxx::result calc = W.exec(query);
+
+                if (calc.empty() || calc[0][0].is_null()) {
+                    std::cout << "Unable to compute " << statName << " in the given interval.\n";
+                } else {
+                    std::cout << "Calculated " << statName << " for " << symbol << ": " << calc[0][0].as<std::string>() << "\n";
+                }
+
             } else {
-                std::cout << statName << " for " << symbol << " is: " << result[0][0].as<std::string>() << "\n";
+                std::cout << "Invalid option.\n";
+                return;
             }
         }
-
     } catch (const std::exception& e) {
         std::cerr << "Database error: " << e.what() << "\n";
     }
