@@ -3,7 +3,6 @@
 #include "user.h"
 #include "global.h"
 
-
 void sendFriendRequest(const std::string& senderUsername) {
     std::string receiverUsername;
     std::cout << "Enter the username of the user you want to request: ";

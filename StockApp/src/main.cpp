@@ -5,6 +5,7 @@
 #include "friend.h"
 #include "stocklist.h"
 
+void portfolioMenu();
 void friendMenu();
 void stockListMenu();
 
@@ -16,64 +17,109 @@ int main() {
         std::cout << "=============================\n";
         std::cout << "  Welcome to Stock Platform \n";
         std::cout << "=============================\n";
-        std::cout << "1. Register\n";
-        std::cout << "2. Login\n";
-        std::cout << "3. Exit\n";
 
-        if (!currentUsername.empty()) {
-            std::cout << "4. Create Portfolio\n";
-            std::cout << "5. View My Portfolios\n";
-            std::cout << "6. Delete Portfolio\n";
-            std::cout << "7. Deposit Cash\n";
-            std::cout << "8. Withdraw Cash\n";
-            std::cout << "9. Buy Stock\n";
-            std::cout << "10. Go to Friends Menu\n";
-            std::cout << "11. Go to Stock List Menu\n";
+        if (currentUsername.empty()) {
+            std::cout << "1. Register\n";
+            std::cout << "2. Login\n";
+            std::cout << "3. Exit\n";
+        } else {
+            std::cout << "Logged in as: " << currentUsername << "\n";
+            std::cout << "1. Logout\n";
+            std::cout << "2. Go to Portfolio Menu\n";
+            std::cout << "3. Go to Friends Menu\n";
+            std::cout << "4. Go to Stock List Menu\n";
+            std::cout << "5. Exit\n";
         }
 
         std::cout << "Enter your choice: ";
         std::cin >> choice;
 
+        if (currentUsername.empty()) {
+            switch (choice) {
+                case 1:
+                    registerUser();
+                    break;
+                case 2:
+                    loginUser();
+                    break;
+                case 3:
+                    running = false;
+                    break;
+                default:
+                    std::cout << "Invalid choice. Try again.\n";
+            }
+        } else {
+            switch (choice) {
+                case 1:
+                    currentUsername.clear();
+                    std::cout << "Logged out successfully.\n";
+                    break;
+                case 2:
+                    portfolioMenu();
+                    break;
+                case 3:
+                    friendMenu();
+                    break;
+                case 4:
+                    stockListMenu();
+                    break;
+                case 5:
+                    running = false;
+                    break;
+                default:
+                    std::cout << "Invalid choice. Try again.\n";
+            }
+        }
+    }
+    return 0;
+}
+
+void portfolioMenu() {
+    int choice;
+
+    while (1) {
+        std::cout << "=============================\n";
+        std::cout << "     Portfolio Menu\n";
+        std::cout << "=============================\n";
+        std::cout << "1. Create Portfolio\n";
+        std::cout << "2. View My Portfolios\n";
+        std::cout << "3. Delete Portfolio\n";
+        std::cout << "4. Deposit Cash\n";
+        std::cout << "5. Withdraw Cash\n";
+        std::cout << "6. Buy Stock\n";
+        std::cout << "7. Sell Stock\n";
+        std::cout << "8. Go Back to Main Menu\n";
+        std::cout << "Enter your choice: ";
+        std::cin >> choice;
+
         switch (choice) {
             case 1:
-                registerUser();
-                break;
-            case 2:
-                loginUser();
-                break;
-            case 3:
-                running = false;
-                break;
-            case 4:
                 createPortfolio(currentUsername);
                 break;
-            case 5:
+            case 2:
                 viewPortfolios(currentUsername);
                 break;
-            case 6:
+            case 3:
                 deletePortfolio(currentUsername);
                 break;
-            case 7:
+            case 4:
                 depositCash(currentUsername);
                 break;
-            case 8:
+            case 5:
                 withdrawCash(currentUsername);
-                break;   
-            case 9:
+                break;
+            case 6:
                 buyStock(currentUsername);
-                break;   
-            case 10:
-                friendMenu(); 
-                break;   
-            case 11:
-                stockListMenu(); 
-                break;      
+                break;
+            case 7:
+                sellStock(currentUsername);
+                break;
+            case 8:
+                return;
             default:
                 std::cout << "Invalid choice. Try again.\n";
         }
     }
-
-    return 0;
 }
 
 void friendMenu(){
@@ -178,4 +224,4 @@ void stockListMenu(){
                 std::cout << "Invalid choice. Try again.\n";
         }
     }
-} 
+}

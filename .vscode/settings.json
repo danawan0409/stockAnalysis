@@ -48,8 +48,6 @@
         "xstring": "cpp",
         "xtr1common": "cpp",
         "xutility": "cpp",
-        "string": "cpp",
-        "iomanip": "cpp",
-        "vector": "cpp"
+        "string": "cpp"
     }
 }
