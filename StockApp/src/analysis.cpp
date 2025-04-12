@@ -145,23 +145,18 @@ bool hasAccessToStockList(pqxx::work& W, const std::string& user, const std::str
     return !res.empty();
 }
 
-void drawMatrix(const json& matrix) {
-    std::vector<std::string> labels;
-    for (const auto& [key, _] : matrix.items()) {
-        labels.push_back(key);
-    }
-
+void printMatrix(const std::vector<std::string>& symbols, const std::map<std::string, std::map<std::string, double>>& matrix) {
+    std::cout << std::fixed << std::setprecision(4);
     std::cout << std::setw(10) << " ";
-    for (const auto& label : labels) {
-        std::cout << std::setw(10) << label;
+    for (const auto& col : symbols) {
+        std::cout << std::setw(10) << col;
     }
     std::cout << "\n";
 
-    for (const auto& row : labels) {
+    for (const auto& row : symbols) {
         std::cout << std::setw(10) << row;
-        for (const auto& col : labels) {
-            double val = matrix[row][col];
-            std::cout << std::setw(10) << std::fixed << std::setprecision(2) << val;
+        for (const auto& col : symbols) {
+            std::cout << std::setw(10) << matrix.at(row).at(col);
         }
         std::cout << "\n";
     }
@@ -242,7 +237,7 @@ void findMatrix(const std::string& matrixType) {
             }
         }
 
-        printMatrix(symbols, matrix);
+        drawMatrix(symbols, matrix);
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
