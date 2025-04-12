@@ -284,20 +284,42 @@ void findMatrix(const std::string& matrixType) {
                     "         (close - LAG(close) OVER (PARTITION BY symbol ORDER BY timestamp)) / "
                     "         NULLIF(LAG(close) OVER (PARTITION BY symbol ORDER BY timestamp), 0) AS daily_return "
                     "  FROM StockHistory "
-                    "  WHERE symbol IN (" + W.quote(s1) + ", " + W.quote(s2) + ")";
+                    "  WHERE (symbol = " + W.quote(s1) + " OR symbol = " + W.quote(s2) + ")";
                 if (useDefault == 2)
                     query += " AND timestamp BETWEEN " + W.quote(startDate) + " AND " + W.quote(endDate);
-                query += "), valid AS ("
-                         "  SELECT * FROM returns WHERE daily_return IS NOT NULL"
-                         "), paired AS ("
-                         "  SELECT a.daily_return AS r1, b.daily_return AS r2 FROM valid a "
-                         "  JOIN valid b ON a.timestamp = b.timestamp "
-                         "  WHERE a.symbol = " + W.quote(s1) + " AND b.symbol = " + W.quote(s2) + ") "
-                         "SELECT " + matrixType + "(r1, r2) AS val FROM paired";
+                query += ") "
+                        "SELECT a.daily_return AS r1, b.daily_return AS r2 FROM returns a "
+                        "JOIN returns b ON a.timestamp = b.timestamp "
+                        "WHERE a.symbol = " + W.quote(s1) + " AND b.symbol = " + W.quote(s2);
 
-                pqxx::result result = W.exec(query);
-                double value = result.empty() || result[0]["val"].is_null() ? 0.0 : result[0]["val"].as<double>();
-                matrix[s1][s2] = value;
+                pqxx::result returns = W.exec(query);
+                std::vector<std::pair<double, double>> pairs;
+                for (const auto& row : returns) {
+                    if (!row["r1"].is_null() && !row["r2"].is_null()) {
+                        pairs.emplace_back(row["r1"].as<double>(), row["r2"].as<double>());
+                    }
+                }
+
+                // Now compute the correlation or covariance manually in C++
+                double sum_x = 0, sum_y = 0, sum_x2 = 0, sum_y2 = 0, sum_xy = 0;
+                int n = 0;
+                for (const auto& [x, y] : pairs) {
+                    sum_x += x;
+                    sum_y += y;
+                    sum_x2 += x * x;
+                    sum_y2 += y * y;
+                    sum_xy += x * y;
+                    ++n;
+                }
+
+                double cov = (n > 1) ? (sum_xy - sum_x * sum_y / n) / (n - 1) : 0.0;
+                double corr = (n > 1)
+                    ? (cov / (std::sqrt((sum_x2 - sum_x * sum_x / n) / (n - 1)) *
+                            std::sqrt((sum_y2 - sum_y * sum_y / n) / (n - 1))))
+                    : 0.0;
+
+                matrix[s1][s2] = matrixType == "covariance" ? cov : corr;
+
             }
         }
 
