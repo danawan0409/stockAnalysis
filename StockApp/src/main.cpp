@@ -35,7 +35,11 @@ int main() {
         }
 
         std::cout << "Enter your choice: ";
-        if (!getValidatedInput(choice)) continue;
+        if (!getValidatedInput(choice)) {
+            std::cout << "Returning to menu...";
+            pauseConsole();
+            continue;
+        }
 
         if (currentUsername.empty()) {
             switch (choice) {
@@ -104,7 +108,11 @@ void portfolioMenu() {
         std::cout << "9. View Future Prediction Graph\n";
         std::cout << "10. Go Back to Main Menu\n";
         std::cout << "Enter your choice: ";
-        std::cin >> choice;
+        if (!getValidatedInput(choice)) {
+            std::cout << "Returning to menu...";
+            pauseConsole();
+            continue;
+        }
 
         switch (choice) {
             case 1:
@@ -170,7 +178,11 @@ void friendMenu(){
         std::cout << "7. Delete Friend\n";
         std::cout << "8. Go Back to Main Menu\n";
         std::cout << "Enter your choice: ";
-        std::cin >> choice;
+        if (!getValidatedInput(choice)) {
+            std::cout << "Returning to menu...";
+            pauseConsole();
+            continue;
+        }
 
         switch (choice) {
             case 1:
@@ -231,7 +243,11 @@ void stockListMenu(){
         std::cout << "10. View all Stocks in a Stock Listt\n";
         std::cout << "11. Go Back to Main Menu\n";
         std::cout << "Enter your choice: ";
-        std::cin >> choice;
+        if (!getValidatedInput(choice)) {
+            std::cout << "Returning to menu...";
+            pauseConsole();
+            continue;
+        }
 
         switch (choice) {
             case 1:
@@ -298,7 +314,11 @@ void analysisMenu(){
         std::cout << "4. View Beta for a Stock\n";
         std::cout << "5. Go Back to Main Menu\n";
         std::cout << "Enter your choice: ";
-        std::cin >> choice;
+        if (!getValidatedInput(choice)) {
+            std::cout << "Returning to menu...";
+            pauseConsole();
+            continue;
+        }
 
         switch (choice) {
             case 1:
