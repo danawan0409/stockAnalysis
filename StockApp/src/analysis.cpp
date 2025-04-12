@@ -145,6 +145,28 @@ bool hasAccessToStockList(pqxx::work& W, const std::string& user, const std::str
     return !res.empty();
 }
 
+void drawMatrix(const json& matrix) {
+    std::vector<std::string> labels;
+    for (const auto& [key, _] : matrix.items()) {
+        labels.push_back(key);
+    }
+
+    std::cout << std::setw(10) << " ";
+    for (const auto& label : labels) {
+        std::cout << std::setw(10) << label;
+    }
+    std::cout << "\n";
+
+    for (const auto& row : labels) {
+        std::cout << std::setw(10) << row;
+        for (const auto& col : labels) {
+            double val = matrix[row][col];
+            std::cout << std::setw(10) << std::fixed << std::setprecision(2) << val;
+        }
+        std::cout << "\n";
+    }
+}
+
 void findMatrix(const std::string& matrixType) {
     std::string ownerUsername, listOrPortfolioName;
     char type;
