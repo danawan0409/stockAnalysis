@@ -4,6 +4,6 @@
 #include <string>
 #include <vector>
 
-void drawStockHistoryASCII(const std::vector<std::pair<std::string, double>>& data);
+void drawASCII(const std::vector<std::pair<std::string, double>>& data);
 
 #endif

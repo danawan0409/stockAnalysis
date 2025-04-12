@@ -647,7 +647,7 @@ void viewPortfolioHistorical(const std::string& ownerUsername) {
             return;
         }
 
-        drawStockHistoryASCII(date_price);
+        drawASCII(date_price);
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
