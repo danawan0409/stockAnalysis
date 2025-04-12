@@ -36,8 +36,8 @@ int main() {
 
         std::cout << "Enter your choice: ";
         if (!getValidatedInput(choice)) {
-            std::cout << "Returning to menu...\n";
-            clearConsole();
+            std::cout << "Returning to menu...";
+            pauseConsole();
             continue;
         }
 
@@ -108,7 +108,11 @@ void portfolioMenu() {
         std::cout << "9. View Future Prediction Graph\n";
         std::cout << "10. Go Back to Main Menu\n";
         std::cout << "Enter your choice: ";
-        std::cin >> choice;
+        if (!getValidatedInput(choice)) {
+            std::cout << "Returning to menu...";
+            pauseConsole();
+            continue;
+        }
 
         switch (choice) {
             case 1:
