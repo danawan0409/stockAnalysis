@@ -37,7 +37,7 @@ int main() {
         std::cout << "Enter your choice: ";
         if (!getValidatedInput(choice)) {
             std::cout << "Returning to menu...\n";
-            pauseConsole();
+            clearConsole();
             continue;
         }
 
