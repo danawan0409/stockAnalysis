@@ -3,6 +3,7 @@
 #include <vector>
 #include <iomanip>
 #include "portfolio.h"
+#include "global.h"
 
 void createPortfolio(const std::string& ownerUsername) {
     std::string name;
