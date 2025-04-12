@@ -45,3 +45,18 @@ void drawASCII(const std::vector<std::pair<std::string, double>>& data) {
 
     std::cout << "Date: " << data.front().first << " to " << data.back().first << "\n";
 }
+
+std::vector<std::pair<std::string, double>> downsampleData(
+    const std::vector<std::pair<std::string, double>>& data, size_t maxPoints = 30) {
+
+    if (data.size() <= maxPoints) return data;
+
+    std::vector<std::pair<std::string, double>> result;
+    size_t step = data.size() / maxPoints;
+
+    for (size_t i = 0; i < data.size(); i += step) {
+        result.push_back(data[i]);
+    }
+
+    return result;
+}

@@ -647,7 +647,11 @@ void viewPortfolioHistorical(const std::string& ownerUsername) {
             return;
         }
 
-        drawASCII(date_price);
+        if (rangeChoice >= 3) {
+            drawASCII(downsampleData(date_price));
+        } else {
+            drawASCII(date_price);
+        }        
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
