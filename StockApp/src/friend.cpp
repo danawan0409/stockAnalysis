@@ -47,7 +47,7 @@ void sendFriendRequest(const std::string& senderUsername) {
             W.commit();
             std::cout << "Friend request re-sent to '" << receiverUsername << "'.\n";
             return;
-        } else if (timeCheck[0]["seconds"].as<double>() > 300){
+        } else if (timeCheck[0]["seconds"].as<double>() < 300){
             std::cout << "Please wait 5 minutes after a friend request has been rejected or a friend has been deleted to request again.\n";
             return;
         }
