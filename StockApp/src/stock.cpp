@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include "global.h"
+#include <regex>
 
 void drawASCII(const std::vector<std::pair<std::string, double>>& data) {
     if (data.empty()) return;
