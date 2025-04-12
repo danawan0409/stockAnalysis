@@ -26,8 +26,9 @@ int main() {
             std::cout << "10. Delete Friend\n";
             std::cout << "11. Create Portfolio\n";
             std::cout << "12. View My Portfolios\n";
-            std::cout << "13. Deposit Cash\n";
-            std::cout << "14. Withdraw Cash\n";
+            std::cout << "13. Delete Portfolio\n";
+            std::cout << "14. Deposit Cash\n";
+            std::cout << "15. Withdraw Cash\n";
         }
 
         std::cout << "Enter your choice: ";
@@ -71,9 +72,12 @@ int main() {
                 viewPortfolios(currentUsername);
                 break;
             case 13:
-                depositCash(currentUsername);
+                deletePortfolio(currentUsername);
                 break;
             case 14:
+                depositCash(currentUsername);
+                break;
+            case 15:
                 withdrawCash(currentUsername);
                 break;            
             default:

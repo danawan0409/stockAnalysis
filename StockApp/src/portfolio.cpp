@@ -29,7 +29,7 @@ void createPortfolio(const std::string& ownerUsername) {
 
         pqxx::result R = W.exec(checkQuery);
         if (!R.empty()) {
-            std::cout << "You already have a portfolio named \"" << name << "\". Please pick another one.\n";
+            std::cout << "You already have a portfolio named \"" << name << "\". Please pick another name.\n";
             return;
         }
 
@@ -68,6 +68,68 @@ void viewPortfolios(const std::string& ownerUsername) {
         }
     } catch (const std::exception& e) {
         std::cerr << "Error retrieving portfolios: " << e.what() << std::endl;
+    }
+}
+
+void deletePortfolio(const std::string& ownerUsername) {
+    try {
+        pqxx::connection C("dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432");
+        pqxx::work W(C);
+
+        // get all portfolios for the user
+        std::string query = "SELECT name FROM Portfolio WHERE ownerUsername = " + W.quote(ownerUsername) + ";";
+        pqxx::result portfolios = W.exec(query);
+
+        if (portfolios.size() <= 1) {
+            std::cout << "You must have at least one portfolio. Deletion not allowed.\n";
+            return;
+        }
+
+        std::cout << "Your portfolios:\n";
+        int idx = 1;
+        for (const auto& row : portfolios) {
+            std::cout << idx++ << ". " << row["name"].as<std::string>() << "\n";
+        }
+
+        std::cout << "Enter number of portfolio to delete: ";
+        int choice;
+        std::cin >> choice;
+        if (choice < 1 || choice > static_cast<int>(portfolios.size())) {
+            std::cout << "Invalid selection.\n";
+            return;
+        }
+
+        std::string targetPortfolio = portfolios[choice - 1]["name"].as<std::string>();
+
+        // check if portfolio has zero cash and no stock holdings
+        std::string checkQuery =
+            "SELECT 1 FROM Portfolio p "
+            "WHERE p.name = " + W.quote(targetPortfolio) + " AND p.ownerUsername = " + W.quote(ownerUsername) +
+            " AND p.cashAccount = 0 "
+            " AND NOT EXISTS ( "
+            "     SELECT 1 FROM PortfolioHasStock "
+            "     WHERE portfolioName = " + W.quote(targetPortfolio) +
+            "     AND ownerUsername = " + W.quote(ownerUsername) +
+            " );";
+
+        pqxx::result check = W.exec(checkQuery);
+        if (check.empty()) {
+            std::cout << "Cannot delete: portfolio must have zero cash and no stock holdings.\n";
+            return;
+        }
+
+        // delete the portfolio
+        std::string deleteQuery =
+            "DELETE FROM Portfolio WHERE name = " + W.quote(targetPortfolio) +
+            " AND ownerUsername = " + W.quote(ownerUsername) + ";";
+
+        W.exec(deleteQuery);
+        W.commit();
+
+        std::cout << "Portfolio \"" << targetPortfolio << "\" deleted successfully.\n";
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << "\n";
     }
 }
 
