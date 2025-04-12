@@ -289,14 +289,14 @@ void shareStockList(const std::string& ownerUsername) {
 }
 
 
-void addReviewStockList(const std::string& reviewerUsername) {
+void addReviewStockList(const std::string& writerusername) {
     std::string stockListName, ownerUsername;
     std::cout << "Enter the stocklist owner username: ";
     std::cin >> ownerUsername;
     std::cout << "Enter the name of the stocklist: ";
     std::getline(std::cin >> std::ws, stockListName);
 
-    if (ownerUsername == reviewerUsername) {
+    if (ownerUsername == writerusername) {
         std::cout << "You cannot review your own stocklist.\n";
         return;
     }
@@ -308,7 +308,7 @@ void addReviewStockList(const std::string& reviewerUsername) {
         // Check if shared with user
         auto sharedCheck = W.exec(
             "SELECT 1 FROM ShareStockList WHERE ownerUsername = " + W.quote(ownerUsername) +
-            " AND receiverUsername = " + W.quote(reviewerUsername) +
+            " AND receiverUsername = " + W.quote(writerusername) +
             " AND stockListName = " + W.quote(stockListName) + ";");
 
         if (sharedCheck.empty()) {
@@ -317,30 +317,30 @@ void addReviewStockList(const std::string& reviewerUsername) {
         }
 
         auto reviewCheck = W.exec(
-            "SELECT 1 FROM ShareStockList WHERE ownerUsername = " + W.quote(ownerUsername) +
+            "SELECT 1 FROM Review WHERE ownerUsername = " + W.quote(ownerUsername) +
             " AND stockListName = " + W.quote(stockListName) +
-            " AND reviewerUsername = " + W.quote(reviewerUsername) + ";");
+            " AND writerusername = " + W.quote(writerusername) + ";");
 
         if (!reviewCheck.empty()) {
             std::cout << "You already reviewed this stocklist. Do you want to edit it? (y/n): ";
             char choice;
             std::cin >> choice;
             if (choice == 'y' || choice == 'Y') {
-                editReviewStockList(reviewerUsername);
+                editReviewStockList(writerusername);
             } else {
                 std::cout << "Review not modified.\n";
             }
             return;
         }
 
-        std::string reviewText;
+        std::string content;
         std::cout << "Enter your review: ";
-        std::getline(std::cin >> std::ws, reviewText);
+        std::getline(std::cin >> std::ws, content);
 
         W.exec(
-            "INSERT INTO ShareStockList (ownerUsername, stockListName, reviewerUsername, reviewText) VALUES (" +
+            "INSERT INTO Review (ownerUsername, stockListName, writerusername, content) VALUES (" +
             W.quote(ownerUsername) + ", " + W.quote(stockListName) + ", " +
-            W.quote(reviewerUsername) + ", " + W.quote(reviewText) + ");");
+            W.quote(writerusername) + ", " + W.quote(content) + ");");
         W.commit();
         std::cout << "Review added successfully.\n";
     } catch (const std::exception& e) {
@@ -349,14 +349,14 @@ void addReviewStockList(const std::string& reviewerUsername) {
 }
 
 
-void editReviewStockList(const std::string& reviewerUsername) {
+void editReviewStockList(const std::string& writerusername) {
     std::string stockListName, ownerUsername;
     std::cout << "Enter the stocklist owner username: ";
     std::cin >> ownerUsername;
     std::cout << "Enter the name of the stocklist: ";
     std::getline(std::cin >> std::ws, stockListName);
 
-    if (ownerUsername == reviewerUsername) {
+    if (ownerUsername == writerusername) {
         std::cout << "You cannot review your own stocklist.\n";
         return;
     }
@@ -368,7 +368,7 @@ void editReviewStockList(const std::string& reviewerUsername) {
         // Check if shared with user
         auto sharedCheck = W.exec(
             "SELECT 1 FROM ShareStockList WHERE ownerUsername = " + W.quote(ownerUsername) +
-            " AND receiverUsername = " + W.quote(reviewerUsername) +
+            " AND receiverUsername = " + W.quote(writerusername) +
             " AND stockListName = " + W.quote(stockListName) + ";");
 
         if (sharedCheck.empty()) {
@@ -377,16 +377,16 @@ void editReviewStockList(const std::string& reviewerUsername) {
         }
 
         auto reviewCheck = W.exec(
-            "SELECT 1 FROM ShareStockList WHERE ownerUsername = " + W.quote(ownerUsername) +
+            "SELECT 1 FROM Review WHERE ownerUsername = " + W.quote(ownerUsername) +
             " AND stockListName = " + W.quote(stockListName) +
-            " AND reviewerUsername = " + W.quote(reviewerUsername) + ";");
+            " AND writerusername = " + W.quote(writerusername) + ";");
 
         if (reviewCheck.empty()) {
             std::cout << "No review exists. Do you want to add one? (y/n): ";
             char choice;
             std::cin >> choice;
             if (choice == 'y' || choice == 'Y') {
-                addReviewStockList(reviewerUsername);
+                addReviewStockList(writerusername);
             } else {
                 std::cout << "No review added.\n";
             }
@@ -398,10 +398,10 @@ void editReviewStockList(const std::string& reviewerUsername) {
         std::getline(std::cin >> std::ws, newText);
 
         W.exec(
-            "UPDATE ShareStockList SET reviewText = " + W.quote(newText) +
+            "UPDATE Review SET content = " + W.quote(newText) +
             " WHERE ownerUsername = " + W.quote(ownerUsername) +
             " AND stockListName = " + W.quote(stockListName) +
-            " AND reviewerUsername = " + W.quote(reviewerUsername) + ";");
+            " AND writerusername = " + W.quote(writerusername) + ";");
         W.commit();
         std::cout << "Review updated successfully.\n";
     } catch (const std::exception& e) {
@@ -410,7 +410,7 @@ void editReviewStockList(const std::string& reviewerUsername) {
 }
 
 
-void deleteReviewStockList(const std::string& reviewerUsername) {
+void deleteReviewStockList(const std::string& writerusername) {
     std::string stockListName, ownerUsername;
     std::cout << "Enter the stocklist owner username: ";
     std::cin >> ownerUsername;
@@ -430,18 +430,18 @@ void deleteReviewStockList(const std::string& reviewerUsername) {
             return;
         }
 
-        std::string targetReviewer = reviewerUsername;
+        std::string targetReviewer = writerusername;
 
-        if (reviewerUsername == ownerUsername) {
+        if (writerusername == ownerUsername) {
             std::cout << "Enter the username of the review to delete: ";
             std::cin >> targetReviewer;
         }
 
         // Check if review exists
         auto reviewCheck = W.exec(
-            "SELECT 1 FROM ShareStockList WHERE ownerUsername = " + W.quote(ownerUsername) +
+            "SELECT 1 FROM Review WHERE ownerUsername = " + W.quote(ownerUsername) +
             " AND stockListName = " + W.quote(stockListName) +
-            " AND reviewerUsername = " + W.quote(targetReviewer) + ";");
+            " AND writerusername = " + W.quote(targetReviewer) + ";");
 
         if (reviewCheck.empty()) {
             std::cout << "No review found for this stocklist by '" << targetReviewer << "'.\n";
@@ -450,9 +450,9 @@ void deleteReviewStockList(const std::string& reviewerUsername) {
 
         // Delete the review
         W.exec(
-            "DELETE FROM ShareStockList WHERE ownerUsername = " + W.quote(ownerUsername) +
+            "DELETE FROM Review WHERE ownerUsername = " + W.quote(ownerUsername) +
             " AND stockListName = " + W.quote(stockListName) +
-            " AND reviewerUsername = " + W.quote(targetReviewer) + ";");
+            " AND writerusername = " + W.quote(targetReviewer) + ";");
 
         W.commit();
         std::cout << "Review deleted successfully.\n";
@@ -462,7 +462,7 @@ void deleteReviewStockList(const std::string& reviewerUsername) {
 }
 
 
-void viewReviewStockList(const std::string& reviewerUsername) {
+void viewReviewStockList(const std::string& writerusername) {
     std::string stockListName, ownerUsername;
     std::cout << "Enter the stocklist owner username: ";
     std::cin >> ownerUsername;
@@ -482,18 +482,18 @@ void viewReviewStockList(const std::string& reviewerUsername) {
             return;
         }
 
-        std::string targetReviewer = reviewerUsername;
+        std::string targetReviewer = writerusername;
 
-        if (reviewerUsername == ownerUsername) {
+        if (writerusername == ownerUsername) {
             std::cout << "Enter the username of the review to view: ";
             std::cin >> targetReviewer;
         }
 
         // Check if review exists
         auto reviewResult = W.exec(
-            "SELECT reviewText FROM ShareStockList WHERE ownerUsername = " + W.quote(ownerUsername) +
+            "SELECT content FROM Review WHERE ownerUsername = " + W.quote(ownerUsername) +
             " AND stockListName = " + W.quote(stockListName) +
-            " AND reviewerUsername = " + W.quote(targetReviewer) + ";");
+            " AND writerusername = " + W.quote(targetReviewer) + ";");
 
         if (reviewResult.empty()) {
             std::cout << "No review found for this stocklist by '" << targetReviewer << "'.\n";
@@ -501,7 +501,7 @@ void viewReviewStockList(const std::string& reviewerUsername) {
         }
 
         std::cout << "Review by '" << targetReviewer << "':\n";
-        std::cout << reviewResult[0]["reviewText"].as<std::string>() << "\n";
+        std::cout << reviewResult[0]["content"].as<std::string>() << "\n";
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << '\n';

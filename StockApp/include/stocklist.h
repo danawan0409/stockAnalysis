@@ -15,13 +15,13 @@ void viewOwnStockLists(const std::string& ownerUsername);
 
 void shareStockList(const std::string& ownerUsername);
 
-void addReviewStockList(const std::string& reviewerUsername);
+void addReviewStockList(const std::string& writerusername);
 
-void editReviewStockList(const std::string& reviewerUsername);
+void editReviewStockList(const std::string& writerusername);
 
-void deleteReviewStockList(const std::string& reviewerUsername);
+void deleteReviewStockList(const std::string& writerusername);
 
-void viewReviewStockList(const std::string& reviewerUsername);
+void viewReviewStockList(const std::string& writerusername);
 
 void deleteStockList(const std::string& ownerUsername);
 
