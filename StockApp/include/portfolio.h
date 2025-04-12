@@ -11,6 +11,6 @@ void sellStock(const std::string& ownerUsername);
 void viewPortfolioHistorical(const std::string& ownerUsername);
 void viewPortfolioPastPerformance(const std::string& ownerUsername);
 void viewPortfolioPrediction(const std::string& ownerUsername);
-void viewPortfolioPredictionPerformance(const std::string& ownerUsername)
+void viewPortfolioPredictionPerformance(const std::string& ownerUsername);
 
 #endif
