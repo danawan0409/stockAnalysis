@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include "global.h"
+#include <iomanip>
 
 
 void findVariation(const std::string& symbol){
