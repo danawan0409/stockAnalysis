@@ -162,7 +162,7 @@ void viewStockLists(const std::string& ownerUsername) {
                 if (res.empty()) {
                     std::cout << "No stock lists found for page " << page << ".\n";
                     page = std::max(0, page - 1);  // Prevent showing empty page
-                    continue;
+                    break;
                 }
 
                 std::cout << "\nStock Lists (Page " << page << "):\n";
