@@ -279,6 +279,12 @@ void findMatrix(const std::string& matrixType) {
         std::string startDate, endDate;
         std::cout << "Use default interval (all data)? (1 for yes, 2 for no): ";
         std::cin >> useDefault;
+
+        if (useDefault != 1 && useDefault != 2) {
+            std::cout << "Invalid option. Please enter 1 or 2.\n";
+            return;
+        }
+        
         if (useDefault == 2) {
             std::regex dateRegex(R"(\d{4}-\d{2}-\d{2})");
 
