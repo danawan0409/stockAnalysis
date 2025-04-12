@@ -164,9 +164,9 @@ void printMatrix(const std::vector<std::string>& symbols, const std::map<std::st
 
 void findMatrix(const std::string& matrixType) {
     std::string ownerUsername, listOrPortfolioName;
-    char type;
+    int type;
 
-    std::cout << "Do you want to find the " << matrixType << " matrix for a portfolio (p) or stock list (s)? ";
+    std::cout << "Do you want to find the " << matrixType << " matrix for a portfolio (1) or stock list (2)? ";
     std::cin >> type;
 
     try {
@@ -175,27 +175,25 @@ void findMatrix(const std::string& matrixType) {
 
         std::vector<std::string> symbols;
 
-        if (type == 'p' || type == 'P') {
-            std::cout << "Enter your username: ";
-            std::cin >> ownerUsername;
+        if (type == 1) {
             std::cout << "Enter the portfolio name: ";
             std::cin.ignore();
             std::getline(std::cin, listOrPortfolioName);
 
             auto r = W.exec("SELECT 1 FROM Portfolio WHERE name = " + W.quote(listOrPortfolioName) +
-                            " AND ownerUsername = " + W.quote(ownerUsername));
+                            " AND ownerUsername = " + W.quote(currentUsername));
             if (r.empty()) {
                 std::cout << "Portfolio not found.\n";
                 return;
             }
 
             auto rows = W.exec("SELECT stockID FROM PortfolioHasStock WHERE portfolioName = " +
-                               W.quote(listOrPortfolioName) + " AND ownerUsername = " + W.quote(ownerUsername));
+                               W.quote(listOrPortfolioName) + " AND ownerUsername = " + W.quote(currentUsername));
             for (const auto& row : rows)
                 symbols.push_back(row["stockID"].c_str());
 
-        } else if (type == 's' || type == 'S') {
-            std::cout << "Enter your username: ";
+        } else if (type == 2) {
+            std::cout << "Enter owner username: ";
             std::cin >> ownerUsername;
             std::cout << "Enter the stock list name: ";
             std::cin.ignore();
