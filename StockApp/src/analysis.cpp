@@ -17,7 +17,7 @@ void findStatistic(const std::string& statName) {
     bool valid = false;
 
     try {
-        pqxx::connection C("your_connection_string_here");
+        pqxx::connection C(connect_info);
         pqxx::work W(C);
 
         if (choice == "1") {
