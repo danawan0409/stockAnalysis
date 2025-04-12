@@ -717,6 +717,88 @@ void viewPortfolioHistorical(const std::string& ownerUsername) {
     }
 }
 
+void viewPortfolioPastPerformance(const std::string& ownerUsername) {
+    try {
+        pqxx::connection C(connect_info);
+        pqxx::nontransaction N(C);
+
+        std::string queryPortfolio =
+            "SELECT name FROM Portfolio WHERE ownerUsername = " + N.quote(ownerUsername) + ";";
+        pqxx::result portfolios = N.exec(queryPortfolio);
+
+        std::cout << "Select a portfolio:\n";
+        for (size_t i = 0; i < portfolios.size(); ++i) {
+            std::cout << i + 1 << ". " << portfolios[i]["name"].as<std::string>() << "\n";
+        }
+
+        int pchoice;
+        if (!getValidatedInput(pchoice)) return;
+        if (pchoice < 1 || pchoice > static_cast<int>(portfolios.size())) {
+            std::cout << "Invalid selection.\n";
+            return;
+        }
+
+        std::string portfolioName = portfolios[pchoice - 1]["name"].as<std::string>();
+
+        std::string queryHoldings =
+            "SELECT stockID, quantity FROM PortfolioHasStock "
+            "WHERE portfolioName = " + N.quote(portfolioName) +
+            " AND ownerUsername = " + N.quote(ownerUsername) + ";";
+        pqxx::result holdings = N.exec(queryHoldings);
+
+        if (holdings.empty()) {
+            std::cout << "This portfolio holds no stocks.\n";
+            return;
+        }
+
+        std::map<std::string, int> stockQuantities;
+        for (const auto& row : holdings) {
+            stockQuantities[row["stockid"].as<std::string>()] = row["quantity"].as<int>();
+        }
+
+        std::map<std::string, std::map<std::string, double>> stockHistory;
+
+        for (const auto& [symbol, _] : stockQuantities) {
+            std::string query =
+                "SELECT timestamp, close FROM StockHistory "
+                "WHERE symbol = " + N.quote(symbol) +
+                " AND timestamp <= DATE '2018-02-07' "
+                "ORDER BY timestamp;";
+            pqxx::result result = N.exec(query);
+            for (const auto& row : result) {
+                std::string date = row["timestamp"].as<std::string>();
+                double price = row["close"].as<double>();
+                stockHistory[date][symbol] = price;
+            }
+        }
+
+        std::map<std::string, double> portfolioValueByDate;
+        for (const auto& [date, prices] : stockHistory) {
+            double total = 0.0;
+            for (const auto& [symbol, qty] : stockQuantities) {
+                if (prices.find(symbol) != prices.end()) {
+                    total += prices.at(symbol) * qty;
+                }
+            }
+            portfolioValueByDate[date] = total;
+        }
+
+        std::vector<std::pair<std::string, double>> valueData;
+        for (const auto& [date, value] : portfolioValueByDate) {
+            valueData.emplace_back(date, value);
+        }
+
+        if (valueData.size() > 30) {
+            valueData = downsampleData(valueData, 30);
+        }
+
+        drawASCII(valueData);
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << "\n";
+    }
+}
+
 void viewPortfolioPrediction(const std::string& ownerUsername) {
     try {
         pqxx::connection C(connect_info);
