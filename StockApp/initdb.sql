@@ -56,7 +56,6 @@ COPY StockHistory(
     symbol) FROM 'C:\Users\yoson\Downloads\SP500History.csv' DELIMITER ','
 CSV HEADER;
 
-
 CREATE TABLE Review (
     writerUsername VARCHAR(50),
     ownerUsername VARCHAR(50), 
@@ -108,14 +107,6 @@ CREATE TABLE PortfolioHasStock (
     FOREIGN KEY (portfolioName, ownerUsername) REFERENCES Portfolio(name, ownerUsername) ON DELETE CASCADE,
     FOREIGN KEY (stockID) REFERENCES Stock(symbol) ON DELETE CASCADE
 );
-
-CREATE TABLE PredictStockPrice (
-    symbol VARCHAR(10),
-    predictedDate DATE,
-    predictedPrice NUMERIC(10, 2),
-    PRIMARY KEY (symbol, predictedDate),
-    FOREIGN KEY (symbol) REFERENCES Stock(symbol) ON DELETE CASCADE
-)
 
 CREATE OR REPLACE FUNCTION check_friendship()
 RETURNS TRIGGER AS $$
