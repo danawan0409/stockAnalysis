@@ -134,7 +134,7 @@ void depositCash(const std::string& ownerUsername) {
             int fromIndex;
             std::cin >> fromIndex;
 
-            if (fromIndex < 1 || fromIndex > static_cast<int>(portfolios.size() || fromIndex == choice) {
+            if (fromIndex < 1 || fromIndex > static_cast<int>(portfolios.size()) || fromIndex == choice) {
                 std::cout << "Invalid transfer source.\n";
                 return;
             }
