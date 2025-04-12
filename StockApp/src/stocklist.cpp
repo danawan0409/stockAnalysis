@@ -686,6 +686,77 @@ void viewStockListHistorical(const std::string& ownerUsername) {
     }
 }
 
+void viewStockListPastPerformance(const std::string& ownerUsername) {
+    std::string listName;
+    std::cout << "Enter your stock list name: ";
+    std::getline(std::cin >> std::ws, listName);
+
+    try {
+        pqxx::connection C(connect_info);
+        pqxx::nontransaction N(C);
+
+        std::string stockQuery =
+            "SELECT stockID, quantity FROM StockListHasStock "
+            "WHERE stockListName = " + N.quote(listName) +
+            " AND ownerUsername = " + N.quote(ownerUsername) + ";";
+        pqxx::result stocks = N.exec(stockQuery);
+
+        if (stocks.empty()) {
+            std::cout << "This stock list has no stocks.\n";
+            return;
+        }
+
+        std::map<std::string, int> stockQuantities;
+        for (const auto& row : stocks) {
+            stockQuantities[row["stockid"].as<std::string>()] = row["quantity"].as<int>();
+        }
+
+        std::string symbolsInClause = "(";
+        for (auto it = stockQuantities.begin(); it != stockQuantities.end(); ++it) {
+            if (it != stockQuantities.begin()) symbolsInClause += ", ";
+            symbolsInClause += N.quote(it->first);
+        }
+        symbolsInClause += ")";
+
+        std::string historyQuery =
+            "SELECT symbol, timestamp, close FROM StockHistory "
+            "WHERE timestamp BETWEEN DATE '2018-02-07' - INTERVAL '1 year' AND DATE '2018-02-07' "
+            "AND symbol IN " + symbolsInClause + " ORDER BY timestamp;";
+
+        pqxx::result history = N.exec(historyQuery);
+
+        if (history.empty()) {
+            std::cout << "No historical data available for the stock list.\n";
+            return;
+        }
+
+        std::map<std::string, double> dailyValueMap;
+
+        for (const auto& row : history) {
+            std::string date = row["timestamp"].as<std::string>();
+            std::string symbol = row["symbol"].as<std::string>();
+            double close = row["close"].as<double>();
+            int qty = stockQuantities[symbol];
+            dailyValueMap[date] += close * qty;
+        }
+
+        std::vector<std::pair<std::string, double>> performance;
+        for (const auto& entry : dailyValueMap) {
+            performance.emplace_back(entry.first, entry.second);
+        }
+
+        if (performance.empty()) {
+            std::cout << "No data available to display performance.\n";
+            return;
+        }
+
+        drawASCII(performance.size() >= 60 ? downsampleData(performance, 30) : performance);
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error in viewStockListPerformance: " << e.what() << "\n";
+    }
+}
+
 void viewStockListPrediction(const std::string& ownerUsername) {
     std::string listName;
     std::cout << "Enter your stock list name: ";

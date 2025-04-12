@@ -29,6 +29,8 @@ void viewStockListsStock(const std::string& viewerUsername);
 
 void viewStockListHistorical(const std::string& viewerUsername);
 
+void viewStockListPastPerformance(const std::string& ownerUsername);
+
 void viewStockListPrediction(const std::string& viewerUsername);
 
 #endif

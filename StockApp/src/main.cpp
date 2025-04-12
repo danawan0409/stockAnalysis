@@ -247,8 +247,9 @@ void stockListMenu(){
         std::cout << "9. Delete a Review for a Stock List\n";
         std::cout << "10. View all Stocks in a Stock Listt\n";
         std::cout << "11. View Historical Graph of Stock in a Stock List\n";
-        std::cout << "12. View Future Prediction of Stock in a Stock List\n";
-        std::cout << "13. Go Back to Main Menu\n";
+        std::cout << "12. View Stock List Historical Performance Graph\n";
+        std::cout << "13. View Future Prediction of Stock in a Stock List\n";
+        std::cout << "14. Go Back to Main Menu\n";
         std::cout << "Enter your choice: ";
         if (!getValidatedInput(choice)) {
             std::cout << "Returning to menu...";
@@ -302,10 +303,14 @@ void stockListMenu(){
                 pauseConsole();
                 break;
             case 12:
-                viewStockListPrediction(currentUsername);
+                viewStockListPastPerformance(currentUsername);
                 pauseConsole();
                 break;
             case 13:
+                viewStockListPrediction(currentUsername);
+                pauseConsole();
+                break;
+            case 14:
                 clearConsole();
                 return;        
             default:
