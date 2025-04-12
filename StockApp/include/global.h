@@ -8,6 +8,10 @@
 extern std::string currentUsername;
 extern std::string connect_info;
 
+template<typename T>
+bool getValidatedInput(T& input);
+
 void pauseConsole();
+void clearConsole();
 
 #endif

@@ -245,20 +245,23 @@ void depositCash(const std::string& ownerUsername) {
     std::cout << "Deposit from:\n1. External bank account\n2. Another portfolio cash account\nEnter choice: ";
     std::cin >> sourceType;
 
-    double amount;
-    std::cout << "Enter amount to deposit: ";
-    std::cin >> amount;
-    if (amount <= 0) {
-        std::cout << "Invalid amount.\n";
-        return;
-    }
+    if (sourceType == 1) {
+        double amount;
+        std::cout << "Enter amount to deposit (0 to cancel): ";
+        std::cin >> amount;
+        if (amount == 0) {
+            std::cout << "Deposit cancelled.\n";
+            return;
+        }
+        if (amount < 0) {
+            std::cout << "Invalid amount.\n";
+            return;
+        }
 
-    try {
-        pqxx::connection C(connect_info);
-        pqxx::work W(C);
+        try {
+            pqxx::connection C(connect_info);
+            pqxx::work W(C);
 
-        if (sourceType == 1) {
-            // Bank deposit (just add to cashAccount)
             std::string update =
                 "UPDATE Portfolio SET cashAccount = cashAccount + " + W.quote(amount) +
                 " WHERE name = " + W.quote(targetPortfolio) +
@@ -267,21 +270,38 @@ void depositCash(const std::string& ownerUsername) {
             W.exec(update);
             W.commit();
             std::cout << "Deposit from bank successful.\n";
+        } catch (const std::exception& e) {
+            std::cerr << "Error during deposit: " << e.what() << "\n";
+        }
+    } else if (sourceType == 2) {
+        std::cout << "Select source portfolio number (note: from portfolio above): ";
+        int fromIndex;
+        std::cin >> fromIndex;
 
-        } else if (sourceType == 2) {
-            // Select source portfolio
-            std::cout << "Select portfolio to transfer from (other than target): ";
-            int fromIndex;
-            std::cin >> fromIndex;
+        if (fromIndex < 1 || fromIndex > static_cast<int>(portfolios.size()) || fromIndex == choice) {
+            std::cout << "Invalid transfer source.\n";
+            return;
+        }
 
-            if (fromIndex < 1 || fromIndex > static_cast<int>(portfolios.size()) || fromIndex == choice) {
-                std::cout << "Invalid transfer source.\n";
-                return;
-            }
+        std::string sourcePortfolio = portfolios[fromIndex - 1].first;
 
-            std::string sourcePortfolio = portfolios[fromIndex - 1].first;
+        double amount;
+        std::cout << "Enter amount to deposit (enter 0 to cancel): ";
+        std::cin >> amount;
 
-            // Check if source has enough
+        if (amount == 0) {
+            std::cout << "Transfer cancelled.\n";
+            return;
+        }
+        if (amount < 0) {
+            std::cout << "Invalid amount.\n";
+            return;
+        }
+
+        try {
+            pqxx::connection C(connect_info);
+            pqxx::work W(C);
+
             std::string check =
                 "SELECT cashAccount FROM Portfolio WHERE name = " + W.quote(sourcePortfolio) +
                 " AND ownerUsername = " + W.quote(ownerUsername) + ";";
@@ -293,7 +313,6 @@ void depositCash(const std::string& ownerUsername) {
                 return;
             }
 
-            // Do transfer
             std::string deduct =
                 "UPDATE Portfolio SET cashAccount = cashAccount - " + W.quote(amount) +
                 " WHERE name = " + W.quote(sourcePortfolio) +
@@ -310,12 +329,11 @@ void depositCash(const std::string& ownerUsername) {
 
             std::cout << "Transferred $" << amount << " from " << sourcePortfolio
                       << " to " << targetPortfolio << "\n";
-        } else {
-            std::cout << "Invalid deposit source.\n";
+        } catch (const std::exception& e) {
+            std::cerr << "Error during deposit: " << e.what() << "\n";
         }
-
-    } catch (const std::exception& e) {
-        std::cerr << "Error during deposit: " << e.what() << "\n";
+    } else {
+        std::cout << "Invalid deposit source.\n";
     }
 }
 
@@ -339,10 +357,14 @@ void withdrawCash(const std::string& ownerUsername) {
     double currentBalance = portfolios[choice - 1].second;
 
     double amount;
-    std::cout << "Enter amount to withdraw: ";
+    std::cout << "Enter amount to withdraw (0 to cancel): ";
     std::cin >> amount;
 
-    if (amount <= 0 || amount > currentBalance) {
+    if (amount == 0) {
+        std::cout << "Withdraw cancelled.\n";
+        return;
+    }
+    if (amount < 0 || amount > currentBalance) {
         std::cout << "Invalid amount. Your balance is $" << currentBalance << "\n";
         return;
     }
