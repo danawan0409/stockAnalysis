@@ -55,16 +55,48 @@ void viewPortfolios(const std::string& ownerUsername) {
 
         std::string query =
             "SELECT name, cashAccount FROM Portfolio WHERE ownerUsername = " + N.quote(ownerUsername) + ";";
-
-        pqxx::result R = N.exec(query);
+        pqxx::result portfolios = N.exec(query);
 
         std::cout << "\nYour Portfolios:\n";
-        if (R.empty()) {
-            std::cout << "(none)\n";
+        int index = 1;
+        for (const auto& row : portfolios) {
+            std::cout << index++ << ". Name: " << row["name"].as<std::string>()
+                      << ", Cash: $" << row["cashaccount"].as<double>() << "\n";
+        }
+
+        int choice;
+        std::cout << "Enter portfolio number to view holdings: ";
+        std::cin >> choice;
+
+        if (choice < 1 || choice > static_cast<int>(portfolios.size())) {
+            std::cout << "Invalid selection.\n";
+            return;
+        }
+
+        std::string selectedPortfolio = portfolios[choice - 1]["name"].as<std::string>();
+
+        std::string stockQuery =
+            "SELECT phs.stockID, phs.quantity, s.close "
+            "FROM PortfolioHasStock phs "
+            "JOIN Stock s ON phs.stockID = s.symbol "
+            "WHERE phs.portfolioName = " + N.quote(selectedPortfolio) +
+            " AND phs.ownerUsername = " + N.quote(ownerUsername) + ";";
+
+        pqxx::result stocks = N.exec(stockQuery);
+
+        std::cout << "\nHoldings in \"" << selectedPortfolio << "\":\n";
+        if (stocks.empty()) {
+            std::cout << "(no stocks held)\n";
         } else {
-            for (const auto& row : R) {
-                std::cout << "Name: " << row["name"].as<std::string>()
-                          << ", Cash: $" << row["cashaccount"].as<double>() << "\n";
+            std::cout << "Symbol\tQuantity\tPrice\t\tValue\n";
+            std::cout << "---------------------------------------------\n";
+            for (const auto& stock : stocks) {
+                std::string symbol = stock["stockid"].as<std::string>();
+                int qty = stock["quantity"].as<int>();
+                double price = stock["close"].as<double>();
+                double value = qty * price;
+
+                std::cout << symbol << "\t" << qty << "\t\t$" << price << "\t$" << value << "\n";
             }
         }
     } catch (const std::exception& e) {
