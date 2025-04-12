@@ -223,7 +223,6 @@ void findMatrix(const std::string& matrixType) {
     try {
         pqxx::connection C(connect_info);
         pqxx::work W(C);
-
         std::vector<std::string> symbols;
 
         if (type == 1) {
@@ -250,15 +249,7 @@ void findMatrix(const std::string& matrixType) {
             std::cin.ignore();
             std::getline(std::cin, listOrPortfolioName);
 
-            auto r = W.exec("SELECT visibility FROM StockList WHERE name = " + W.quote(listOrPortfolioName) +
-                            " AND ownerUsername = " + W.quote(ownerUsername));
-            if (r.empty()) {
-                std::cout << "Stock list not found.\n";
-                return;
-            }
-
-            auto visibility = r[0]["visibility"].c_str();
-            if (visibility == std::string("private") && ownerUsername != ownerUsername) {
+            if (!hasAccessToStockList(W, currentUsername, ownerUsername, listOrPortfolioName)) {
                 std::cout << "You do not have access to this stock list.\n";
                 return;
             }
@@ -272,16 +263,40 @@ void findMatrix(const std::string& matrixType) {
             return;
         }
 
-        // Load matrix values
+        int useDefault;
+        std::string startDate, endDate;
+        std::cout << "Use default interval (all data)? (1 for yes, 2 for no): ";
+        std::cin >> useDefault;
+        if (useDefault == 2) {
+            std::cout << "Enter start date (YYYY-MM-DD): ";
+            std::cin >> startDate;
+            std::cout << "Enter end date (YYYY-MM-DD): ";
+            std::cin >> endDate;
+        }
+
+        // Compute matrix directly from returns
         std::map<std::string, std::map<std::string, double>> matrix;
         for (const auto& s1 : symbols) {
             for (const auto& s2 : symbols) {
-                pqxx::result result = W.exec(
-                    "SELECT " + W.esc(matrixType) + " FROM CachedMatrix "
-                    "WHERE (symbol1 = " + W.quote(s1) + " AND symbol2 = " + W.quote(s2) + ") "
-                    "   OR (symbol1 = " + W.quote(s2) + " AND symbol2 = " + W.quote(s1) + ")");
+                std::string query =
+                    "WITH returns AS ("
+                    "  SELECT symbol, timestamp, "
+                    "         (close - LAG(close) OVER (PARTITION BY symbol ORDER BY timestamp)) / "
+                    "         NULLIF(LAG(close) OVER (PARTITION BY symbol ORDER BY timestamp), 0) AS daily_return "
+                    "  FROM StockHistory "
+                    "  WHERE symbol IN (" + W.quote(s1) + ", " + W.quote(s2) + ")";
+                if (useDefault == 2)
+                    query += " AND timestamp BETWEEN " + W.quote(startDate) + " AND " + W.quote(endDate);
+                query += "), valid AS ("
+                         "  SELECT * FROM returns WHERE daily_return IS NOT NULL"
+                         "), paired AS ("
+                         "  SELECT a.daily_return AS r1, b.daily_return AS r2 FROM valid a "
+                         "  JOIN valid b ON a.timestamp = b.timestamp "
+                         "  WHERE a.symbol = " + W.quote(s1) + " AND b.symbol = " + W.quote(s2) + ") "
+                         "SELECT " + matrixType + "(r1, r2) AS val FROM paired";
 
-                double value = result.empty() ? 0.0 : result[0][matrixType].as<double>();
+                pqxx::result result = W.exec(query);
+                double value = result.empty() || result[0]["val"].is_null() ? 0.0 : result[0]["val"].as<double>();
                 matrix[s1][s2] = value;
             }
         }
@@ -292,6 +307,7 @@ void findMatrix(const std::string& matrixType) {
         std::cerr << "Error: " << e.what() << "\n";
     }
 }
+
 
 void findStockListCovarianceMatrix() {
     findMatrix("covariance");
