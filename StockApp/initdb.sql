@@ -31,7 +31,8 @@ CREATE TABLE StockList (
 );
 
 CREATE TABLE Stock (
-    symbol VARCHAR(10) PRIMARY KEY
+    symbol VARCHAR(10) PRIMARY KEY,
+    close NUMERIC(10, 2)
 );
 
 CREATE TABLE StockHistory (
@@ -141,6 +142,6 @@ EXECUTE FUNCTION check_friendship();
 
 -- Insert initial data into the Stock table
 INSERT INTO Stock(symbol)
-SELECT DISTINCT symbol
+SELECT symbol, close
 FROM StockHistory
-WHERE symbol NOT IN (SELECT symbol FROM Stock);
+WHERE timestamp = '2018-02-17'
