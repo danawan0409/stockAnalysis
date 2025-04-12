@@ -46,10 +46,10 @@ void drawASCII(const std::vector<std::pair<std::string, double>>& data) {
     std::cout << "Date: " << data.front().first << " to " << data.back().first << "\n";
     std::cout << "         ";
     for (size_t i = 0; i < data.size(); ++i) {
-        if (i % 5 == 0)
-            std::cout << data[i].first.substr(5, 2) << " ";
+        if (i % 2 == 0)
+            std::cout << data[i].first << " ";
         else
-            std::cout << "   ";
-    }
+            std::cout << "           ";
+    }    
     std::cout << "\n";
 }
