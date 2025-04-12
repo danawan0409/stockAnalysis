@@ -8,12 +8,12 @@
 #include <iomanip>
 
 
-void findVariation(const std::string& symbol){
+void findVariation(){
     return; 
 }
 
 
-void findBeta(const std::string& symbol){
+void findBeta(){
     return; 
 }
 
