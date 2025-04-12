@@ -171,24 +171,24 @@ void viewStockLists(const std::string& ownerUsername) {
             }
 
             std::cout << "\nUse the arrow keys to navigate (Right to next page, Left to previous page).\n";
-            std::cout << "Type 'exit' to stop toggling.\n";
+std::cout << "Type 'exit' to stop toggling.\n";
 
-            // Get user input for page toggling or exit
-            char key = getch();
-            if (key == 27) { // Arrow keys start with ESC (27)
+// Get user input
+char key = getch();
+            if (key == 27) { // Arrow keys start with ESC
                 char secondKey = getch();
                 char thirdKey = getch();
                 if (secondKey == '[') {
-                    if (thirdKey == 'C') { // Right arrow key pressed
+                    if (thirdKey == 'C') { // Right arrow
                         page++;
-                    } else if (thirdKey == 'D') { // Left arrow key pressed
+                    } else if (thirdKey == 'D') { // Left arrow
                         if (page > 0) page--;
                     }
                 }
-            } else if (key == 'e') {  // If the user types 'exit'
-                char exitCommand[4];
-                std::cin >> exitCommand;
-                if (exitCommand[0] == 'x' && exitCommand[1] == 'i' && exitCommand[2] == 't') {
+            } else if (key == 'e') {
+                std::string remaining;
+                std::getline(std::cin, remaining);  // Read the rest of the line
+                if (remaining == "xit") {
                     running = false;
                 }
             }
@@ -317,7 +317,7 @@ void addReviewStockList(const std::string& reviewerUsername) {
         }
 
         auto reviewCheck = W.exec(
-            "SELECT 1 FROM StockListReview WHERE ownerUsername = " + W.quote(ownerUsername) +
+            "SELECT 1 FROM ShareStockList WHERE ownerUsername = " + W.quote(ownerUsername) +
             " AND stockListName = " + W.quote(stockListName) +
             " AND reviewerUsername = " + W.quote(reviewerUsername) + ";");
 
@@ -338,7 +338,7 @@ void addReviewStockList(const std::string& reviewerUsername) {
         std::getline(std::cin >> std::ws, reviewText);
 
         W.exec(
-            "INSERT INTO StockListReview (ownerUsername, stockListName, reviewerUsername, reviewText) VALUES (" +
+            "INSERT INTO ShareStockList (ownerUsername, stockListName, reviewerUsername, reviewText) VALUES (" +
             W.quote(ownerUsername) + ", " + W.quote(stockListName) + ", " +
             W.quote(reviewerUsername) + ", " + W.quote(reviewText) + ");");
         W.commit();
@@ -377,7 +377,7 @@ void editReviewStockList(const std::string& reviewerUsername) {
         }
 
         auto reviewCheck = W.exec(
-            "SELECT 1 FROM StockListReview WHERE ownerUsername = " + W.quote(ownerUsername) +
+            "SELECT 1 FROM ShareStockList WHERE ownerUsername = " + W.quote(ownerUsername) +
             " AND stockListName = " + W.quote(stockListName) +
             " AND reviewerUsername = " + W.quote(reviewerUsername) + ";");
 
@@ -398,7 +398,7 @@ void editReviewStockList(const std::string& reviewerUsername) {
         std::getline(std::cin >> std::ws, newText);
 
         W.exec(
-            "UPDATE StockListReview SET reviewText = " + W.quote(newText) +
+            "UPDATE ShareStockList SET reviewText = " + W.quote(newText) +
             " WHERE ownerUsername = " + W.quote(ownerUsername) +
             " AND stockListName = " + W.quote(stockListName) +
             " AND reviewerUsername = " + W.quote(reviewerUsername) + ";");
@@ -439,7 +439,7 @@ void deleteReviewStockList(const std::string& reviewerUsername) {
 
         // Check if review exists
         auto reviewCheck = W.exec(
-            "SELECT 1 FROM StockListReview WHERE ownerUsername = " + W.quote(ownerUsername) +
+            "SELECT 1 FROM ShareStockList WHERE ownerUsername = " + W.quote(ownerUsername) +
             " AND stockListName = " + W.quote(stockListName) +
             " AND reviewerUsername = " + W.quote(targetReviewer) + ";");
 
@@ -450,7 +450,7 @@ void deleteReviewStockList(const std::string& reviewerUsername) {
 
         // Delete the review
         W.exec(
-            "DELETE FROM StockListReview WHERE ownerUsername = " + W.quote(ownerUsername) +
+            "DELETE FROM ShareStockList WHERE ownerUsername = " + W.quote(ownerUsername) +
             " AND stockListName = " + W.quote(stockListName) +
             " AND reviewerUsername = " + W.quote(targetReviewer) + ";");
 
@@ -491,7 +491,7 @@ void viewReviewStockList(const std::string& reviewerUsername) {
 
         // Check if review exists
         auto reviewResult = W.exec(
-            "SELECT reviewText FROM StockListReview WHERE ownerUsername = " + W.quote(ownerUsername) +
+            "SELECT reviewText FROM ShareStockList WHERE ownerUsername = " + W.quote(ownerUsername) +
             " AND stockListName = " + W.quote(stockListName) +
             " AND reviewerUsername = " + W.quote(targetReviewer) + ";");
 
