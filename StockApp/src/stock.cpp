@@ -105,6 +105,19 @@ std::vector<std::pair<std::string, double>> predictFuturePrices(
     }
 }
 
+char getch() {
+    struct termios oldt, newt;
+    char ch;
+    tcgetattr(STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~ICANON;
+    newt.c_lflag &= ~ECHO;
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    ch = getchar();
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+    return ch;
+}
+
 void viewAllStocks() {
     try {
         pqxx::connection C(connect_info);
