@@ -4,6 +4,7 @@
 #include <iomanip>
 #include "portfolio.h"
 #include "global.h"
+#include "stock.h"
 
 void createPortfolio(const std::string& ownerUsername) {
     std::string name;
@@ -554,5 +555,101 @@ void sellStock(const std::string& ownerUsername) {
 
     } catch (const std::exception& e) {
         std::cerr << "Error during stock sale: " << e.what() << "\n";
+    }
+}
+
+void viewPortfolioHistorical(const std::string& ownerUsername) {
+    try {
+        pqxx::connection C(connect_info);
+        pqxx::nontransaction N(C);
+
+        std::string queryPortfolio =
+            "SELECT name FROM Portfolio WHERE ownerUsername = " + N.quote(ownerUsername) + ";";
+        pqxx::result portfolios = N.exec(queryPortfolio);
+
+        std::cout << "Select a portfolio:\n";
+        for (size_t i = 0; i < portfolios.size(); ++i) {
+            std::cout << i + 1 << ". " << portfolios[i]["name"].as<std::string>() << "\n";
+        }
+
+        int pchoice;
+        std::cin >> pchoice;
+        if (pchoice < 1 || pchoice > static_cast<int>(portfolios.size())) {
+            std::cout << "Invalid selection.\n";
+            return;
+        }
+
+        std::string portfolioName = portfolios[pchoice - 1]["name"].as<std::string>();
+
+        std::string queryHoldings =
+            "SELECT stockID FROM PortfolioHasStock WHERE portfolioName = " + N.quote(portfolioName) +
+            " AND ownerUsername = " + N.quote(ownerUsername) + ";";
+        pqxx::result holdings = N.exec(queryHoldings);
+
+        if (holdings.empty()) {
+            std::cout << "No stocks in this portfolio.\n";
+            return;
+        }
+
+        std::cout << "Select a stock:\n";
+        for (size_t i = 0; i < holdings.size(); ++i) {
+            std::cout << i + 1 << ". " << holdings[i]["stockid"].as<std::string>() << "\n";
+        }
+
+        int schoice;
+        std::cin >> schoice;
+        if (schoice < 1 || schoice > static_cast<int>(holdings.size())) {
+            std::cout << "Invalid selection.\n";
+            return;
+        }
+
+        std::string symbol = holdings[schoice - 1]["stockid"].as<std::string>();
+
+        std::cout << "Select time interval:\n";
+        std::cout << "1. Past 1 week\n";
+        std::cout << "2. Past 1 month\n";
+        std::cout << "3. Past 3 months\n";
+        std::cout << "4. Past 1 year\n";
+        std::cout << "5. Past 5 years\n";
+
+        int rangeChoice;
+        std::cin >> rangeChoice;
+
+        std::string interval;
+        switch (rangeChoice) {
+            case 1: interval = "7 days"; break;
+            case 2: interval = "1 month"; break;
+            case 3: interval = "3 months"; break;
+            case 4: interval = "1 year"; break;
+            case 5: interval = "5 years"; break;
+            default:
+                std::cout << "Invalid interval.\n";
+                return;
+        }
+
+        std::string sql =
+            "SELECT timestamp, close FROM StockHistory "
+            "WHERE symbol = " + N.quote(symbol) +
+            " AND timestamp BETWEEN DATE '2018-02-07' - INTERVAL '" + interval + "' AND DATE '2018-02-07' "
+            "ORDER BY timestamp;";
+
+        pqxx::result prices = N.exec(sql);
+
+        std::vector<std::pair<std::string, double>> date_price;
+        for (const auto& row : prices) {
+            std::string date = row["timestamp"].as<std::string>();
+            double close = row["close"].as<double>();
+            date_price.emplace_back(date, close);
+        }
+
+        if (date_price.empty()) {
+            std::cout << "No historical price data found for this range.\n";
+            return;
+        }
+
+        drawStockHistoryASCII(date_price);
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << "\n";
     }
 }

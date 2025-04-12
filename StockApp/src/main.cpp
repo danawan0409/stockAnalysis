@@ -99,7 +99,8 @@ void portfolioMenu() {
         std::cout << "5. Withdraw Cash\n";
         std::cout << "6. Buy Stock\n";
         std::cout << "7. Sell Stock\n";
-        std::cout << "8. Go Back to Main Menu\n";
+        std::cout << "8. View Historical Price Graph\n";
+        std::cout << "9. Go Back to Main Menu\n";
         std::cout << "Enter your choice: ";
         std::cin >> choice;
 
@@ -133,6 +134,10 @@ void portfolioMenu() {
                 pause();
                 break;
             case 8:
+                viewPortfolioHistorical(currentUsername);
+                pause();
+                break;            
+            case 9:
                 return;
             default:
                 std::cout << "Invalid choice. Try again.\n";
@@ -286,20 +291,25 @@ void analysisMenu(){
         switch (choice) {
             case 1:
                 findStockListCorrelationMatrix();
+                pause();
                 break;
             case 2:
                 findStockListCovarianceMatrix(); 
+                pause();
                 break;
             case 3:
                 findVariation();
+                pause();
                 break;
             case 4:
                 findBeta();
+                pause();
                 break;
             case 5:
                 return;        
             default:
                 std::cout << "Invalid choice. Try again.\n";
+                pause();
         }
     }
 }
