@@ -229,6 +229,58 @@ void viewOwnStockLists(const std::string& ownerUsername) {
 }
 
 
+void viewStockListsStock(const std::string& viewerUsername) {
+    std::string listName, ownerUsername;
+    std::cout << "Enter the stock list name you want to view: ";
+    std::getline(std::cin >> std::ws, listName);  // Support spaces in name
+
+    std::cout << "Enter the owner of this stock list: ";
+    std::getline(std::cin >> std::ws, ownerUsername);
+
+    try {
+        pqxx::connection C(connect_info);
+        pqxx::work W(C);
+
+        // Check access permission
+        std::string accessQuery =
+            "SELECT 1 FROM StockList S "
+            "LEFT JOIN ShareStockList SS ON S.name = SS.stockListName AND S.ownerUsername = SS.ownerUsername "
+            "WHERE S.name = " + W.quote(listName) + " AND S.ownerUsername = " + W.quote(ownerUsername) + " AND ("
+            "S.visibility = 'public' OR "
+            "S.ownerUsername = " + W.quote(viewerUsername) + " OR "
+            "SS.receiverUsername = " + W.quote(viewerUsername) +
+            ");";
+
+        pqxx::result accessResult = W.exec(accessQuery);
+        if (accessResult.empty()) {
+            std::cout << "Access denied: You don't have permission to view this stock list.\n";
+            return;
+        }
+
+        // Fetch stocks in the list
+        std::string stockQuery =
+            "SELECT stockID, quantity FROM StockListHasStock "
+            "WHERE stockListName = " + W.quote(listName) +
+            " AND ownerUsername = " + W.quote(ownerUsername) + ";";
+
+        pqxx::result stockResult = W.exec(stockQuery);
+        if (stockResult.empty()) {
+            std::cout << "No stocks found in the stock list.\n";
+            return;
+        }
+
+        std::cout << "\nStocks in \"" << listName << "\" by " << ownerUsername << ":\n";
+        for (const auto& row : stockResult) {
+            std::cout << "- Stock: " << row["stockID"].c_str()
+                      << ", Quantity: " << row["quantity"].as<int>() << "\n";
+        }
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << "\n";
+    }
+}
+
+
 void shareStockList(const std::string& ownerUsername) {
     std::string stockListName, receiverUsername;
     std::cout << "Enter the name of the stocklist to share: ";

@@ -25,4 +25,6 @@ void viewReviewStockList(const std::string& writerusername);
 
 void deleteStockList(const std::string& ownerUsername);
 
+void viewStockListsStock(const std::string& viewerUsername); 
+
 #endif

@@ -256,12 +256,28 @@ void deleteFriend(const std::string& username) {
             return;
         }
 
+        // Set friendship state to 'deleted'
         query =
             "UPDATE Friends "
             "SET state = 'deleted', updatedTime = CURRENT_TIMESTAMP "
             "WHERE (senderUsername = " + W.quote(username) + " AND receiverUsername = " + W.quote(otherUsername) + ") "
             "   OR (senderUsername = " + W.quote(otherUsername) + " AND receiverUsername = " + W.quote(username) + ");";
         W.exec(query);
+
+        // Delete shared stock lists between the two users
+        query =
+            "DELETE FROM ShareStockList "
+            "WHERE (ownerUsername = " + W.quote(username) + " AND receiverUsername = " + W.quote(otherUsername) + ") "
+            "   OR (ownerUsername = " + W.quote(otherUsername) + " AND receiverUsername = " + W.quote(username) + ");";
+        W.exec(query);
+
+        // Delete reviews written by either about the other's stock lists
+        query =
+            "DELETE FROM Review "
+            "WHERE (writerUsername = " + W.quote(username) + " AND ownerUsername = " + W.quote(otherUsername) + ") "
+            "   OR (writerUsername = " + W.quote(otherUsername) + " AND ownerUsername = " + W.quote(username) + ");";
+        W.exec(query);
+
         W.commit();
         std::cout << "Friendship with '" << otherUsername << "' has been deleted.\n";
 
@@ -269,3 +285,4 @@ void deleteFriend(const std::string& username) {
         std::cerr << "Error: " << e.what() << "\n";
     }
 }
+
