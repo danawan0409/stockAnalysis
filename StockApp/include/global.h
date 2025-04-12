@@ -8,6 +8,6 @@
 extern std::string currentUsername;
 extern std::string connect_info;
 
-void pause();
+void pauseConsole();
 
 #endif
