@@ -27,4 +27,8 @@ void deleteStockList(const std::string& ownerUsername);
 
 void viewStockListsStock(const std::string& viewerUsername); 
 
+void viewStockListHistorical(const std::string& viewerUsername);
+
+void viewStockListPrediction(const std::string& viewerUsername);
+
 #endif
