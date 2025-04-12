@@ -143,6 +143,7 @@ void portfolioMenu() {
                 pauseConsole();
                 break;      
             case 10:
+                pauseConsole();
                 return;
             default:
                 std::cout << "Invalid choice. Try again.\n";
@@ -199,6 +200,7 @@ void friendMenu(){
                 pauseConsole();
                 break;
             case 8:
+                pauseConsole();
                 return;       
             default:
                 std::cout << "Invalid choice. Try again.\n";
@@ -270,6 +272,7 @@ void stockListMenu(){
                 pauseConsole();
                 break; 
             case 11:
+                pauseConsole();
                 return;        
             default:
                 std::cout << "Invalid choice. Try again.\n";
@@ -311,6 +314,7 @@ void analysisMenu(){
                 pauseConsole();
                 break;
             case 5:
+                pauseConsole();
                 return;        
             default:
                 std::cout << "Invalid choice. Try again.\n";
