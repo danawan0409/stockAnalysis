@@ -35,7 +35,7 @@ int main() {
         }
 
         std::cout << "Enter your choice: ";
-        std::cin >> choice;
+        if (!getValidatedInput(choice)) return;
 
         if (currentUsername.empty()) {
             switch (choice) {
