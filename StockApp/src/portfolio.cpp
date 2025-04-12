@@ -886,3 +886,99 @@ void viewPortfolioPrediction(const std::string& ownerUsername) {
         std::cerr << "Prediction Error: " << e.what() << "\n";
     }
 }
+
+void viewPortfolioPredictionPerformance(const std::string& ownerUsername) {
+    try {
+        pqxx::connection C(connect_info);
+        pqxx::nontransaction N(C);
+
+        std::string queryPortfolio =
+            "SELECT name FROM Portfolio WHERE ownerUsername = " + N.quote(ownerUsername) + ";";
+        pqxx::result portfolios = N.exec(queryPortfolio);
+
+        if (portfolios.empty()) {
+            std::cout << "You have no portfolios.\n";
+            return;
+        }
+
+        std::cout << "Select a portfolio:\n";
+        for (size_t i = 0; i < portfolios.size(); ++i) {
+            std::cout << i + 1 << ". " << portfolios[i]["name"].as<std::string>() << "\n";
+        }
+
+        int pchoice;
+        if (!getValidatedInput(pchoice)) return;
+        if (pchoice < 1 || pchoice > static_cast<int>(portfolios.size())) {
+            std::cout << "Invalid selection.\n";
+            return;
+        }
+
+        std::string portfolioName = portfolios[pchoice - 1]["name"].as<std::string>();
+
+        std::string queryHoldings =
+            "SELECT stockID, quantity FROM PortfolioHasStock "
+            "WHERE portfolioName = " + N.quote(portfolioName) +
+            " AND ownerUsername = " + N.quote(ownerUsername) + ";";
+        pqxx::result holdings = N.exec(queryHoldings);
+
+        if (holdings.empty()) {
+            std::cout << "No stocks in this portfolio.\n";
+            return;
+        }
+
+        std::cout << "Enter number of days to predict into the future (1-365): ";
+        int days;
+        if (!getValidatedInput(days)) return;
+        if (days <= 0 || days > 365) {
+            std::cout << "Invalid days range.\n";
+            return;
+        }
+
+        std::map<std::string, int> symbolQuantity;
+        for (const auto& row : holdings) {
+            std::string symbol = row["stockid"].as<std::string>();
+            int qty = row["quantity"].as<int>();
+            symbolQuantity[symbol] = qty;
+        }
+
+        std::map<std::string, double> dateToValue;
+
+        for (const auto& [symbol, qty] : symbolQuantity) {
+            std::string sql =
+                "SELECT timestamp, close FROM StockHistory "
+                "WHERE symbol = " + N.quote(symbol) +
+                " AND timestamp <= DATE '2018-02-07' "
+                "ORDER BY timestamp;";
+            pqxx::result historyResult = N.exec(sql);
+
+            std::vector<std::pair<std::string, double>> history;
+            for (const auto& row : historyResult) {
+                history.emplace_back(row["timestamp"].as<std::string>(), row["close"].as<double>());
+            }
+
+            if (history.empty()) continue;
+
+            auto predictions = predictFuturePrices(history, days);
+
+            for (const auto& [date, price] : predictions) {
+                dateToValue[date] += price * qty;
+            }
+        }
+
+        if (dateToValue.empty()) {
+            std::cout << "Unable to generate predictions for any stock.\n";
+            return;
+        }
+
+        std::vector<std::pair<std::string, double>> value_series;
+        for (const auto& [date, value] : dateToValue) {
+            value_series.emplace_back(date, value);
+        }
+
+        std::cout << "\nPredicted Portfolio Market Value for " << days << " days:\n";
+        drawASCII(value_series);
+
+    } catch (const std::exception& e) {
+        std::cerr << "Prediction Error: " << e.what() << "\n";
+    }
+}

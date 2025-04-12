@@ -107,7 +107,8 @@ void portfolioMenu() {
         std::cout << "8. View Historical Price Graph\n";
         std::cout << "9. View Portfolio Historical Performance Graph\n";
         std::cout << "10. View Future Prediction Graph\n";
-        std::cout << "11. Go Back to Main Menu\n";
+        std::cout << "11. View Future Portfolio Performance Graph\n";
+        std::cout << "12. Go Back to Main Menu\n";
         std::cout << "Enter your choice: ";
         if (!getValidatedInput(choice)) {
             std::cout << "Returning to menu...";
@@ -155,8 +156,12 @@ void portfolioMenu() {
             case 10:
                 viewPortfolioPrediction(currentUsername);
                 pauseConsole();
-                break;      
+                break;  
             case 11:
+                viewPortfolioPredictionPerformance(currentUsername);
+                pauseConsole();
+                break;                
+            case 12:
                 clearConsole();
                 return;
             default:
