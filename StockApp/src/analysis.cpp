@@ -4,6 +4,7 @@
 #include <map>
 #include <iomanip>
 #include "json.hpp"
+#include "global.h"
 
 using json = nlohmann::json;
 
