@@ -138,7 +138,7 @@ void viewAllStocks() {
                     std::cout << symbol << " | close: " << close << "\n";
                 }
             }
-            
+
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             std::cout << "\nPress n (next), p (previous), q (quit): ";
             char ch = getch();
@@ -148,6 +148,8 @@ void viewAllStocks() {
                 offset = std::max(0, offset - pageSize);
             } else if (ch == 'q') {
                 break;
+            } else {
+                std::cout << "Please select correct command.\n";
             }
         }
 
