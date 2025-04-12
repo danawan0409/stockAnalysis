@@ -178,7 +178,11 @@ void friendMenu(){
         std::cout << "7. Delete Friend\n";
         std::cout << "8. Go Back to Main Menu\n";
         std::cout << "Enter your choice: ";
-        std::cin >> choice;
+        if (!getValidatedInput(choice)) {
+            std::cout << "Returning to menu...";
+            pauseConsole();
+            continue;
+        }
 
         switch (choice) {
             case 1:
@@ -239,7 +243,11 @@ void stockListMenu(){
         std::cout << "10. View all Stocks in a Stock Listt\n";
         std::cout << "11. Go Back to Main Menu\n";
         std::cout << "Enter your choice: ";
-        std::cin >> choice;
+        if (!getValidatedInput(choice)) {
+            std::cout << "Returning to menu...";
+            pauseConsole();
+            continue;
+        }
 
         switch (choice) {
             case 1:
@@ -306,7 +314,11 @@ void analysisMenu(){
         std::cout << "4. View Beta for a Stock\n";
         std::cout << "5. Go Back to Main Menu\n";
         std::cout << "Enter your choice: ";
-        std::cin >> choice;
+        if (!getValidatedInput(choice)) {
+            std::cout << "Returning to menu...";
+            pauseConsole();
+            continue;
+        }
 
         switch (choice) {
             case 1:
