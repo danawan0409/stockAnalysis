@@ -90,5 +90,9 @@ std::vector<std::pair<std::string, double>> predictFuturePrices(
         mktime(&start);
     }
 
-    return predictions;
+    if (predictDays > 30) {
+        return downsampleData(predictions, 30);
+    } else {
+        return predictions;
+    }
 }
