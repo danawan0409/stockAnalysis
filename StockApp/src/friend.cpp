@@ -247,8 +247,9 @@ void deleteFriend(const std::string& username) {
 
         std::string query =
             "SELECT 1 FROM Friends "
-            "WHERE (senderUsername = " + W.quote(username) + " AND receiverUsername = " + W.quote(otherUsername) + ") "
-            "   OR (senderUsername = " + W.quote(otherUsername) + " AND receiverUsername = " + W.quote(username) + ");";
+            "WHERE ((senderUsername = " + W.quote(username) + " AND receiverUsername = " + W.quote(otherUsername) + ") "
+            "   OR (senderUsername = " + W.quote(otherUsername) + " AND receiverUsername = " + W.quote(username) + ")) "
+            "   AND state = 'accepted';";
         pqxx::result check = W.exec(query);
 
         if (check.empty()) {
