@@ -135,6 +135,7 @@ char getch() {
 
 void viewStockLists(const std::string& ownerUsername) {
     int page = 0;
+    int lastPrintedPage = -1;  // To track if we need to re-fetch
     bool running = true;
 
     try {
@@ -142,46 +143,49 @@ void viewStockLists(const std::string& ownerUsername) {
         pqxx::work W(C);
 
         while (running) {
-            int offset = page * 20;
+            if (page != lastPrintedPage) {
+                int offset = page * 20;
 
-            // Query to fetch stocklists for the user
-            std::string query =
-                "SELECT DISTINCT S.name, S.ownerUsername, S.visibility "
-                "FROM StockList S "
-                "LEFT JOIN ShareStockList SS ON S.name = SS.stockListName AND S.ownerUsername = SS.ownerUsername "
-                "WHERE "
-                "(S.ownerUsername = " + W.quote(ownerUsername) + ") "                       // owned
-                "OR (SS.receiverUsername = " + W.quote(ownerUsername) + ") "                // shared
-                "OR (S.visibility = 'public') "                                             // public
-                "ORDER BY S.ownerUsername, S.name "
-                "LIMIT 20 OFFSET " + W.quote(offset) + ";";
+                std::string query =
+                    "SELECT DISTINCT S.name, S.ownerUsername, S.visibility "
+                    "FROM StockList S "
+                    "LEFT JOIN ShareStockList SS ON S.name = SS.stockListName AND S.ownerUsername = SS.ownerUsername "
+                    "WHERE "
+                    "(S.ownerUsername = " + W.quote(ownerUsername) + ") "
+                    "OR (SS.receiverUsername = " + W.quote(ownerUsername) + ") "
+                    "OR (S.visibility = 'public') "
+                    "ORDER BY S.ownerUsername, S.name "
+                    "LIMIT 20 OFFSET " + W.quote(offset) + ";";
 
-            pqxx::result res = W.exec(query);
+                pqxx::result res = W.exec(query);
 
-            if (res.empty()) {
-                std::cout << "No stock lists found for page " << page << ".\n";
-                return;
+                if (res.empty()) {
+                    std::cout << "No stock lists found for page " << page << ".\n";
+                    page = std::max(0, page - 1);  // Prevent showing empty page
+                    continue;
+                }
+
+                std::cout << "\nStock Lists (Page " << page << "):\n";
+                for (const auto& row : res) {
+                    std::cout << "- " << row["name"].c_str()
+                              << " (Owner: " << row["ownerUsername"].c_str()
+                              << ", Visibility: " << row["visibility"].c_str() << ")\n";
+                }
+
+                std::cout << "\nUse the arrow keys to navigate (Right to next page, Left to previous page).\n";
+                std::cout << "Type 'e' to stop toggling.\n";
+
+                lastPrintedPage = page;  // Mark current page as printed
             }
 
-            std::cout << "Stock Lists (Page " << page << "):\n";
-            for (const auto& row : res) {
-                std::cout << "- " << row["name"].c_str()
-                          << " (Owner: " << row["ownerUsername"].c_str()
-                          << ", Visibility: " << row["visibility"].c_str() << ")\n";
-            }
-
-            std::cout << "\nUse the arrow keys to navigate (Right to next page, Left to previous page).\n";
-            std::cout << "Type 'e' to stop toggling.\n";
-
-            // Get user input
             char key = getch();
-            if (key == 27) { // Arrow keys start with ESC
+            if (key == 27) { // ESC
                 char secondKey = getch();
                 char thirdKey = getch();
                 if (secondKey == '[') {
-                    if (thirdKey == 'C') { // Right arrow
+                    if (thirdKey == 'C') { // Right
                         page++;
-                    } else if (thirdKey == 'D') { // Left arrow
+                    } else if (thirdKey == 'D') { // Left
                         if (page > 0) page--;
                     }
                 }
