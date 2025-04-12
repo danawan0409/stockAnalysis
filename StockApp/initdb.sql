@@ -144,4 +144,4 @@ EXECUTE FUNCTION check_friendship();
 INSERT INTO Stock(symbol, close)
 SELECT symbol, close
 FROM StockHistory
-WHERE timestamp = '2018-02-17'
+WHERE timestamp = '2018-02-07';
