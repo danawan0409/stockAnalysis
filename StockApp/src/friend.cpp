@@ -1,6 +1,8 @@
 #include <iostream>
 #include <pqxx/pqxx>
 #include "user.h"
+#include "global.h"
+
 
 void sendFriendRequest(const std::string& senderUsername) {
     std::string receiverUsername;

@@ -5,8 +5,6 @@
 #include "friend.h"
 #include "stocklist.h"
 
-std::string connect_info = "dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432";
-
 void friendMenu();
 void stockListMenu();
 

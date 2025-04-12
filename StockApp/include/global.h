@@ -4,5 +4,6 @@
 #include <string>
 
 extern std::string currentUsername;
+extern std::string connect_info;
 
 #endif
