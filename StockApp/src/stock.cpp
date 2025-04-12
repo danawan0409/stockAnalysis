@@ -6,6 +6,9 @@
 #include <algorithm>
 #include <random>
 #include <pqxx/pqxx>
+#include <termios.h>
+#include <unistd.h>
+#include <stdio.h>
 
 void drawASCII(const std::vector<std::pair<std::string, double>>& data) {
     if (data.empty()) return;
