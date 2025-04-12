@@ -63,15 +63,19 @@ int main() {
                     break;
                 case 2:
                     portfolioMenu();
+                    pauseConsole();
                     break;
                 case 3:
                     friendMenu();
+                    pauseConsole();
                     break;
                 case 4:
                     stockListMenu();
+                    pauseConsole();
                     break;
                 case 5: 
                     analysisMenu(); 
+                    pauseConsole();
                     break; 
                 case 6:
                     running = false;
@@ -100,7 +104,8 @@ void portfolioMenu() {
         std::cout << "6. Buy Stock\n";
         std::cout << "7. Sell Stock\n";
         std::cout << "8. View Historical Price Graph\n";
-        std::cout << "9. Go Back to Main Menu\n";
+        std::cout << "9. View Future Prediction Graph\n";
+        std::cout << "10. Go Back to Main Menu\n";
         std::cout << "Enter your choice: ";
         std::cin >> choice;
 
@@ -136,8 +141,13 @@ void portfolioMenu() {
             case 8:
                 viewPortfolioHistorical(currentUsername);
                 pauseConsole();
-                break;            
+                break;      
             case 9:
+                viewPortfolioPrediction(currentUsername);
+                pauseConsole();
+                break;      
+            case 10:
+                pauseConsole();
                 return;
             default:
                 std::cout << "Invalid choice. Try again.\n";
@@ -194,6 +204,7 @@ void friendMenu(){
                 pauseConsole();
                 break;
             case 8:
+                pauseConsole();
                 return;       
             default:
                 std::cout << "Invalid choice. Try again.\n";
@@ -265,6 +276,7 @@ void stockListMenu(){
                 pauseConsole();
                 break; 
             case 11:
+                pauseConsole();
                 return;        
             default:
                 std::cout << "Invalid choice. Try again.\n";
@@ -306,6 +318,7 @@ void analysisMenu(){
                 pauseConsole();
                 break;
             case 5:
+                pauseConsole();
                 return;        
             default:
                 std::cout << "Invalid choice. Try again.\n";
