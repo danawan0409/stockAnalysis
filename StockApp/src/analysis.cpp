@@ -293,16 +293,38 @@ void findMatrix(const std::string& matrixType) {
             return;
         }
 
+        if (useDefault == 1) {
+            // Load from CachedMatrix
+            std::map<std::string, std::map<std::string, double>> matrix;
+        
+            for (const auto& s1 : symbols) {
+                for (const auto& s2 : symbols) {
+                    std::string first = std::min(s1, s2);
+                    std::string second = std::max(s1, s2);
+        
+                    std::string q = "SELECT " + matrixType + " FROM CachedMatrix WHERE symbol1 = " +
+                                    W.quote(first) + " AND symbol2 = " + W.quote(second);
+                    pqxx::result r = W.exec(q);
+        
+                    double val = r.empty() ? 0.0 : r[0][matrixType].as<double>();
+                    matrix[s1][s2] = val;
+                }
+            }
+        
+            printMatrix(symbols, matrix);
+            return;
+        }        
+
         if (useDefault == 2) {
             std::regex dateRegex(R"(\d{4}-\d{2}-\d{2})");
-
+        
             std::cout << "Enter start date (YYYY-MM-DD): ";
             std::cin >> startDate;
             if (!std::regex_match(startDate, dateRegex)) {
                 std::cout << "Invalid start date format.\n";
                 return;
             }
-
+        
             std::cout << "Enter end date (YYYY-MM-DD): ";
             std::cin >> endDate;
             if (!std::regex_match(endDate, dateRegex)) {
@@ -310,7 +332,7 @@ void findMatrix(const std::string& matrixType) {
                 return;
             }
         }
-
+        
         // Compute matrix directly from returns
         std::map<std::string, std::map<std::string, double>> matrix;
         for (const auto& s1 : symbols) {
