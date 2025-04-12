@@ -30,7 +30,7 @@ int main() {
             std::cout << "2. Go to Portfolio Menu\n";
             std::cout << "3. Go to Friends Menu\n";
             std::cout << "4. Go to Stock List Menu\n";
-            std::cout << "4. Go to Analysis Menu\n";
+            std::cout << "5. Go to Analysis Menu\n";
             std::cout << "6. Exit\n";
         }
 
@@ -283,7 +283,7 @@ void analysisMenu(){
         std::cout << "1. View Correlation Matrix\n";
         std::cout << "2. View Covariance Matrix\n";
         std::cout << "3. View Variation for a Stock\n";
-        std::cout << "4. View Beta for a Stock\\n";
+        std::cout << "4. View Beta for a Stock\n";
         std::cout << "5. Go Back to Main Menu\n";
         std::cout << "Enter your choice: ";
         std::cin >> choice;
