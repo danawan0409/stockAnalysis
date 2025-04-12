@@ -3,6 +3,8 @@
 
 #include <string>
 
+#define CURRENT_DATE "'2018-02-07'"
+
 extern std::string currentUsername;
 extern std::string connect_info;
 

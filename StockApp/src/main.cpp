@@ -87,8 +87,8 @@ void portfolioMenu() {
         std::cout << "     Portfolio Menu\n";
         std::cout << "=============================\n";
         std::cout << "1. Create Portfolio\n";
-        std::cout << "2. View My Portfolios\n";
-        std::cout << "3. Delete Portfolio\n";
+        std::cout << "2. View My Portfolios (with Market Value)\n";
+        std::cout << "3. Delete My Portfolio\n";
         std::cout << "4. Deposit Cash\n";
         std::cout << "5. Withdraw Cash\n";
         std::cout << "6. Buy Stock\n";
