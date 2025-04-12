@@ -10,6 +10,23 @@
 
 using json = nlohmann::json;
 
+bool hasAccessToStockList(pqxx::work& W, const std::string& user, const std::string& owner, const std::string& listName) {
+    std::string accessQuery = R"(
+        SELECT 1 FROM StockList S
+        LEFT JOIN ShareStockList SS ON S.name = SS.stockListName AND S.ownerUsername = SS.ownerUsername
+        WHERE S.name = )" + W.quote(listName) + " AND S.ownerUsername = " + W.quote(owner) + R"(
+        AND (
+            S.ownerUsername = )" + W.quote(user) + R"( OR
+            SS.receiverUsername = )" + W.quote(user) + R"( OR
+            S.visibility = 'public'
+        )
+        LIMIT 1;
+    )";
+
+    pqxx::result res = W.exec(accessQuery);
+    return !res.empty();
+}
+
 void findStatistic(const std::string& statName) {
     std::string choice;
     std::cout << "Do you want to find the " << statName << " of a stock in a (1) Portfolio or (2) StockList? ";
@@ -189,23 +206,6 @@ void findVariation() {
 
 void findBeta() {
     findStatistic("beta");
-}
-
-bool hasAccessToStockList(pqxx::work& W, const std::string& user, const std::string& owner, const std::string& listName) {
-    std::string accessQuery = R"(
-        SELECT 1 FROM StockList S
-        LEFT JOIN ShareStockList SS ON S.name = SS.stockListName AND S.ownerUsername = SS.ownerUsername
-        WHERE S.name = )" + W.quote(listName) + " AND S.ownerUsername = " + W.quote(owner) + R"(
-        AND (
-            S.ownerUsername = )" + W.quote(user) + R"( OR
-            SS.receiverUsername = )" + W.quote(user) + R"( OR
-            S.visibility = 'public'
-        )
-        LIMIT 1;
-    )";
-
-    pqxx::result res = W.exec(accessQuery);
-    return !res.empty();
 }
 
 void printMatrix(const std::vector<std::string>& symbols, const std::map<std::string, std::map<std::string, double>>& matrix) {
