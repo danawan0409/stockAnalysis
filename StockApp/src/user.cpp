@@ -1,5 +1,6 @@
 #include <iostream>
 #include <pqxx/pqxx>
+#include "global.h"
 #include "user.h"
 
 void registerUser() {
@@ -49,11 +50,12 @@ void loginUser() {
         pqxx::result R = N.exec(query);
 
         if (R.size() == 1) {
-            std::cout << "Login successful!\n";
+            currentUsername = username;
+            std::cout << "Login successful! Welcome, " << currentUsername << "\n";
         } else {
             std::cout << "Invalid username or password.\n";
         }
     } catch (const std::exception &e) {
-        std::cerr << "Error: " << e.what() << "\n";
+        std::cerr << "Login Error: " << e.what() << "\n";
     }
 }
