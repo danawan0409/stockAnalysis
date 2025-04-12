@@ -56,9 +56,7 @@ void drawMatrix(const json& matrix) {
 }
 
 void findMatrix(const std::string& matrixType) {
-    std::string viewer, owner, list;
-    std::cout << "Enter your username: ";
-    std::cin >> viewer;
+    std::string owner, list;
     std::cout << "Enter stock list owner: ";
     std::cin >> owner;
     std::cout << "Enter stock list name: ";
@@ -69,7 +67,7 @@ void findMatrix(const std::string& matrixType) {
         pqxx::work W(C);
 
         // Check access
-        if (!hasAccessToStockList(W, viewer, owner, list)) {
+        if (!hasAccessToStockList(W, currentUsername, owner, list)) {
             std::cout << "Access denied.\n";
             return;
         }
@@ -92,7 +90,7 @@ void findMatrix(const std::string& matrixType) {
         std::string sql =
             "WITH symbols AS ("
             "  SELECT stockID FROM StockListHasStock "
-            "  WHERE stockListName = " + W.quote(list) + " AND ownerUsername = " + W.quote(owner) + R"()"
+            "  WHERE stockListName = " + W.quote(list) + " AND ownerUsername = " + W.quote(owner) +
             "), "
             "prices AS ("
             "  SELECT symbol, timestamp, close "
@@ -110,14 +108,15 @@ void findMatrix(const std::string& matrixType) {
             "), "
             "matrix AS ("
             "  SELECT a.symbol AS sym1, b.symbol AS sym2, "
-            + std::string(matrixType == "correlation" ? "corr" : "covar_pop") +
+                + std::string(matrixType == "correlation" ? "corr" : "covar_pop") +
             "(a.value, b.value) AS val "
             "  FROM unpacked a JOIN unpacked b ON a.timestamp = b.timestamp "
             "  GROUP BY sym1, sym2"
             ") "
-            "SELECT jsonb_object_agg(sym1, row_to_json(pairs)) AS matrix FROM ("
+            "SELECT jsonb_object_agg(sym1, pairs) AS matrix FROM ("
             "  SELECT sym1, jsonb_object_agg(sym2, val) AS pairs FROM matrix GROUP BY sym1"
             ") AS result;";
+
 
         pqxx::result res = W.exec(sql);
         if (res.empty()) {
