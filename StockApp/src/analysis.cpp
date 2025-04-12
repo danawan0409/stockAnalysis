@@ -40,7 +40,7 @@ void findStatistic(const std::string& statName) {
         pqxx::work W(C);
 
         std::string owner, name, symbol;
-        
+
         if (choice == "1") {
             std::cout << "Enter the name of the portfolio: ";
             std::cin.ignore();
@@ -157,29 +157,34 @@ void findStatistic(const std::string& statName) {
 
                 std::string query = R"(
                     WITH prices AS (
-                        SELECT timestamp, close
+                        SELECT timestamp, symbol, close
                         FROM StockHistory
-                        WHERE symbol = )" + W.quote(symbol) + R"( AND timestamp BETWEEN )" + W.quote(start) + R"( AND )" + W.quote(end) + R"(
+                        WHERE timestamp BETWEEN )" + W.quote(start) + R"( AND )" + W.quote(end) + R"(
                     ),
-                    returns AS (
-                        SELECT (close - LAG(close) OVER (ORDER BY timestamp)) / NULLIF(LAG(close) OVER (ORDER BY timestamp), 0) AS ret
+                    stock_returns AS (
+                        SELECT
+                            timestamp,
+                            symbol,
+                            (close - LAG(close) OVER (PARTITION BY symbol ORDER BY timestamp)) /
+                            NULLIF(LAG(close) OVER (PARTITION BY symbol ORDER BY timestamp), 0) AS ret
                         FROM prices
                     )
-                    SELECT
-                        )" + (statName == "variation"
-                            ? "VAR_POP(ret)"
-                            : "COVAR_POP(ret, mr.market_return)") + R"( AS result
-                    FROM returns r )" +
-                    (statName == "beta"
-                        ? R"(
-                        JOIN (
-                            SELECT timestamp, AVG((close - LAG(close) OVER (PARTITION BY symbol ORDER BY timestamp)) / NULLIF(LAG(close) OVER (PARTITION BY symbol ORDER BY timestamp), 0)) AS market_return
-                            FROM StockHistory
-                            WHERE timestamp BETWEEN )" + W.quote(start) + " AND " + W.quote(end) + R"(
-                            GROUP BY timestamp
-                        ) mr ON r.timestamp = mr.timestamp
-                    )"
-                        : "") + ";";
+                )" + (statName == "variation" ?
+                    R"(SELECT VAR_POP(ret) AS result
+                    FROM stock_returns
+                    WHERE symbol = )" + W.quote(symbol) + ";" :
+                    R"(, market_returns AS (
+                        SELECT
+                            timestamp,
+                            AVG(ret) AS market_return
+                        FROM stock_returns
+                        GROUP BY timestamp
+                    )
+                    SELECT COVAR_POP(s.ret, m.market_return) AS result
+                    FROM stock_returns s
+                    JOIN market_returns m ON s.timestamp = m.timestamp
+                    WHERE s.symbol = )" + W.quote(symbol) + ";");
+
 
                 pqxx::result calc = W.exec(query);
 
