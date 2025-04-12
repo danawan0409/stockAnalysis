@@ -171,7 +171,6 @@ void viewAllStocks() {
 void addStock() {
     std::string symbol;
     std::string closeInput;
-    double closeValue;
 
     std::cout << "Enter stock symbol: ";
     std::cin >> symbol;
@@ -193,14 +192,16 @@ void addStock() {
 
         std::string query;
         if (!closeInput.empty()) {
+            double closeVal;
             try {
-                closeValue = std::stod(closeInput);
-                query = "INSERT INTO Stock (symbol, close) VALUES (" + 
-                        W.quote(symbol) + ", " + W.quote(*closeValue) + ")";
+                closeVal = std::stod(closeInput);
             } catch (...) {
                 std::cout << "Invalid number format.\n";
                 return;
             }
+
+            query = "INSERT INTO Stock (symbol, close) VALUES (" +
+                    W.quote(symbol) + ", " + W.quote(closeVal) + ")";
         } else {
             query = "INSERT INTO Stock (symbol) VALUES (" + W.quote(symbol) + ")";
         }
