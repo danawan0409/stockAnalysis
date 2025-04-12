@@ -138,7 +138,8 @@ void viewAllStocks() {
                     std::cout << symbol << " | close: " << close << "\n";
                 }
             }
-
+            
+            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
             std::cout << "\nPress n (next), p (previous), q (quit): ";
             char ch = getch();
             if (ch == 'n') {
