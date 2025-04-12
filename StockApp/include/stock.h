@@ -9,4 +9,8 @@ std::vector<std::pair<std::string, double>> downsampleData(const std::vector<std
 std::vector<std::pair<std::string, double>> predictFuturePrices(
     const std::vector<std::pair<std::string, double>>& historical, int predictDays, int windowSize = 5);
 
+void addStockRecord(); 
+void addStock(); 
+void viewAllStocks(); 
+
 #endif

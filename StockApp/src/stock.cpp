@@ -5,6 +5,7 @@
 #include <cmath>
 #include <algorithm>
 #include <random>
+#include <pqxx/pqxx>
 
 void drawASCII(const std::vector<std::pair<std::string, double>>& data) {
     if (data.empty()) return;
@@ -101,5 +102,152 @@ std::vector<std::pair<std::string, double>> predictFuturePrices(
         return downsampleData(predictions, 30);
     } else {
         return predictions;
+    }
+}
+
+void viewAllStocks() {
+    try {
+        pqxx::connection C(connect_info);
+        pqxx::work W(C);
+
+        const int pageSize = 10;
+        int offset = 0;
+
+        while (true) {
+            pqxx::result rows = W.exec(
+                "SELECT symbol, close FROM Stock ORDER BY symbol LIMIT " +
+                W.quote(pageSize) + " OFFSET " + W.quote(offset));
+
+            if (rows.empty()) {
+                std::cout << "No more stocks to display.\n";
+                break;
+            }
+
+            std::cout << "\n--- Stocks ---\n";
+            for (const auto& row : rows) {
+                std::string symbol = row["symbol"].c_str();
+                if (row["close"].is_null()) {
+                    std::cout << symbol << " | close: (N/A)\n";
+                } else {
+                    double close = row["close"].as<double>();
+                    std::cout << symbol << " | close: " << close << "\n";
+                }
+            }
+
+            std::cout << "\nPress n (next), p (previous), q (quit): ";
+            char ch = getch();
+            if (ch == 'n') {
+                offset += pageSize;
+            } else if (ch == 'p') {
+                offset = std::max(0, offset - pageSize);
+            } else if (ch == 'q') {
+                break;
+            }
+        }
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << "\n";
+    }
+}
+
+void addStock() {
+    std::string symbol;
+    std::string closeInput;
+    double closeValue;
+
+    std::cout << "Enter stock symbol: ";
+    std::cin >> symbol;
+
+    try {
+        pqxx::connection C(connect_info);
+        pqxx::work W(C);
+
+        pqxx::result existing = W.exec(
+            "SELECT 1 FROM Stock WHERE symbol = " + W.quote(symbol));
+        if (!existing.empty()) {
+            std::cout << "Stock already exists.\n";
+            return;
+        }
+
+        std::cout << "Enter most recent close value (or leave empty to skip): ";
+        std::cin.ignore();
+        std::getline(std::cin, closeInput);
+
+        std::string query;
+        if (!closeInput.empty()) {
+            try {
+                closeValue = std::stod(closeInput);
+                query = "INSERT INTO Stock (symbol, close) VALUES (" + 
+                        W.quote(symbol) + ", " + W.quote(*closeValue) + ")";
+            } catch (...) {
+                std::cout << "Invalid number format.\n";
+                return;
+            }
+        } else {
+            query = "INSERT INTO Stock (symbol) VALUES (" + W.quote(symbol) + ")";
+        }
+
+        W.exec(query);
+        W.commit();
+        std::cout << "Stock added successfully.\n";
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << "\n";
+    }
+}
+
+
+void addStockRecord() {
+    std::string symbol;
+    std::cout << "Enter stock symbol: ";
+    std::cin >> symbol;
+
+    try {
+        pqxx::connection C(connect_info);
+        pqxx::work W(C);
+
+        pqxx::result res = W.exec(
+            "SELECT 1 FROM Stock WHERE symbol = " + W.quote(symbol));
+        if (res.empty()) {
+            std::cout << "Stock does not exist.\n";
+            return;
+        }
+
+        std::string date;
+        std::regex dateRegex(R"(\d{4}-\d{2}-\d{2})");
+
+        std::cout << "Enter date (YYYY-MM-DD): ";
+        std::cin >> date;
+        if (!std::regex_match(date, dateRegex)) {
+            std::cout << "Invalid date format.\n";
+            return;
+        }
+
+        double open, close, high, low;
+        long long volume;
+
+        std::cout << "Enter open: ";
+        std::cin >> open;
+        std::cout << "Enter close: ";
+        std::cin >> close;
+        std::cout << "Enter high: ";
+        std::cin >> high;
+        std::cout << "Enter low: ";
+        std::cin >> low;
+        std::cout << "Enter volume: ";
+        std::cin >> volume;
+
+        W.exec(
+            "INSERT INTO StockHistory (symbol, timestamp, open, close, high, low, volume) VALUES (" +
+            W.quote(symbol) + ", " + W.quote(date) + ", " +
+            W.quote(open) + ", " + W.quote(close) + ", " +
+            W.quote(high) + ", " + W.quote(low) + ", " +
+            W.quote(volume) + ")"
+        );
+        W.commit();
+        std::cout << "Stock record added.\n";
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << "\n";
     }
 }

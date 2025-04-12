@@ -5,11 +5,13 @@
 #include "friend.h"
 #include "stocklist.h"
 #include "analysis.h"
+#include "stock.h"
 
 void portfolioMenu();
 void friendMenu();
 void stockListMenu();
 void analysisMenu();
+void stockMenu(); 
 
 int main() {
     int choice;
@@ -31,7 +33,8 @@ int main() {
             std::cout << "3. Go to Friends Menu\n";
             std::cout << "4. Go to Stock List Menu\n";
             std::cout << "5. Go to Analysis Menu\n";
-            std::cout << "6. Exit\n";
+            std::cout << "6. Go to Stock Menu\n";
+            std::cout << "7. Exit\n";
         }
 
         std::cout << "Enter your choice: ";
@@ -77,7 +80,10 @@ int main() {
                 case 5: 
                     analysisMenu(); 
                     break; 
-                case 6:
+                case 6: 
+                    stockMenu(); 
+                    break;
+                case 7:
                     running = false;
                     break;
                 default:
@@ -363,6 +369,48 @@ void analysisMenu(){
                 pauseConsole();
                 break;
             case 5:
+                clearConsole();
+                return;        
+            default:
+                std::cout << "Invalid choice. Try again.\n";
+                pauseConsole();
+        }
+    }
+}
+
+void stockMenu(){
+    clearConsole();
+    int choice;
+
+    while (1) {
+        std::cout << "=============================\n";
+        std::cout << "  Stock Menu\n";
+        std::cout << "=============================\n";
+        std::cout << "1. View All Stocks\n";
+        std::cout << "2. Add a new Stock\n";
+        std::cout << "3. Add a Stock Record\n";
+        std::cout << "4. Go Back to Main Menu\n";
+        std::cout << "Enter your choice: ";
+        if (!getValidatedInput(choice)) {
+            std::cout << "Returning to menu...";
+            pauseConsole();
+            continue;
+        }
+
+        switch (choice) {
+            case 1:
+                viewAllStocks();
+                pauseConsole();
+                break;
+            case 2:
+                addStock(); 
+                pauseConsole();
+                break;
+            case 3:
+                addStockRecord();
+                pauseConsole();
+                break;
+            case 4:
                 clearConsole();
                 return;        
             default:
