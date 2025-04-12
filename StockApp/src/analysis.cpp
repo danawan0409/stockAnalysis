@@ -121,7 +121,7 @@ void findStatistic(const std::string& statName) {
 }
 
 void findVariation() {
-    findStatistic("correlation");
+    findStatistic("variation");
 }
 
 void findBeta() {

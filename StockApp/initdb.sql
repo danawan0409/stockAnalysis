@@ -146,7 +146,7 @@ SELECT symbol, close
 FROM StockHistory
 WHERE timestamp = '2018-02-07';
 
-
+-- Caching table
 WITH stock_returns AS (
     SELECT 
         symbol,
@@ -154,7 +154,6 @@ WITH stock_returns AS (
         (close - LAG(close) OVER (PARTITION BY symbol ORDER BY timestamp)) / 
         LAG(close) OVER (PARTITION BY symbol ORDER BY timestamp) AS daily_return
     FROM StockHistory
-    WHERE symbol IN (SELECT DISTINCT symbol FROM StockHistory)
 ),
 market_returns AS (
     SELECT 
@@ -181,24 +180,25 @@ stats AS (
     FROM filtered
     GROUP BY symbol
 )
-INSERT INTO CachedStockStatistics (symbol, beta, correlation, last_updated)
+INSERT INTO CachedStockStatistics (symbol, beta, variation, last_updated)
 SELECT 
     symbol,
     (covariance / NULLIF(market_variance, 0)) AS beta,
-    (covariance / (SQRT(stock_variance) * SQRT(market_variance))) AS correlation,
+    stock_variance AS variation,
     CURRENT_TIMESTAMP
 FROM stats
-ON CONFLICT (symbol)  -- If the symbol already exists, update the values
+ON CONFLICT (symbol)
 DO UPDATE SET 
     beta = EXCLUDED.beta,
-    correlation = EXCLUDED.correlation,
+    variation = EXCLUDED.variation,
     last_updated = CURRENT_TIMESTAMP;
+
 
 CREATE TABLE CachedStockStatistics(
     symbol VARCHAR(10) NOT NULL,
-    beta NUMERIC(10, 5),  -- Beta with precision for up to 5 decimal places
-    correlation NUMERIC(10, 5),  -- Correlation coefficient with precision for up to 5 decimal places
-    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,  -- Track when the cache was last updated
+    beta NUMERIC(10, 5),         -- Beta with precision for up to 5 decimal places
+    variation NUMERIC(10, 5),    -- Stock variance instead of correlation
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (symbol)
 );
 
