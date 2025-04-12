@@ -1,5 +1,6 @@
 #include <iostream>
 #include <pqxx/pqxx>
+#include <vector>
 #include "portfolio.h"
 
 void createPortfolio(const std::string& ownerUsername) {
@@ -301,5 +302,80 @@ void withdrawCash(const std::string& ownerUsername) {
 
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << "\n";
+    }
+}
+
+void buyStock(const std::string& ownerUsername) {
+    auto portfolios = listUserPortfolios(ownerUsername);
+
+    int choice;
+    std::cout << "Select portfolio by number: ";
+    std::cin >> choice;
+
+    if (choice < 1 || choice > static_cast<int>(portfolios.size())) {
+        std::cout << "Invalid portfolio choice.\n";
+        return;
+    }
+
+    std::string portfolioName = portfolios[choice - 1].first;
+    double currentCash = portfolios[choice - 1].second;
+
+    std::string stockSymbol;
+    std::cout << "Enter stock symbol: ";
+    std::cin >> stockSymbol;
+
+    try {
+        pqxx::connection C("dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432");
+        pqxx::work W(C);
+
+        // search for stock close price
+        std::string getPrice =
+            "SELECT close FROM Stock WHERE symbol = " + W.quote(stockSymbol) + ";";
+        pqxx::result priceResult = W.exec(getPrice);
+        if (priceResult.empty()) {
+            std::cout << "Stock symbol not found.\n";
+            return;
+        }
+
+        double price = priceResult[0]["close"].as<double>();
+        std::cout << "Current price of " << stockSymbol << ": $" << price << "\n";
+
+        int quantity;
+        std::cout << "Enter quantity to buy: ";
+        std::cin >> quantity;
+        if (quantity <= 0) {
+            std::cout << "Quantity must be positive.\n";
+            return;
+        }
+
+        double totalCost = price * quantity;
+
+        if (totalCost > currentCash) {
+            std::cout << "Not enough cash. You need $" << totalCost << ", but have only $" << currentCash << "\n";
+            return;
+        }
+
+        std::string insertStock =
+            "INSERT INTO PortfolioHasStock (portfolioName, ownerUsername, stockID, quantity) "
+            "VALUES (" + W.quote(portfolioName) + ", " + W.quote(ownerUsername) + ", " + W.quote(stockSymbol) + ", " +
+            std::to_string(quantity) + ") "
+            "ON CONFLICT (portfolioName, ownerUsername, stockID) "
+            "DO UPDATE SET quantity = PortfolioHasStock.quantity + EXCLUDED.quantity;";
+
+        // deduct from cash account
+        std::string updateCash =
+            "UPDATE Portfolio SET cashAccount = cashAccount - " + std::to_string(totalCost) +
+            " WHERE name = " + W.quote(portfolioName) +
+            " AND ownerUsername = " + W.quote(ownerUsername) + ";";
+
+        W.exec(insertStock);
+        W.exec(updateCash);
+        W.commit();
+
+        std::cout << "Bought " << quantity << " shares of " << stockSymbol
+                  << " at $" << price << " each, total cost $" << totalCost << "\n";
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error during stock purchase: " << e.what() << "\n";
     }
 }

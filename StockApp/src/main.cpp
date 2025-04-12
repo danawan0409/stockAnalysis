@@ -29,6 +29,7 @@ int main() {
             std::cout << "13. Delete Portfolio\n";
             std::cout << "14. Deposit Cash\n";
             std::cout << "15. Withdraw Cash\n";
+            std::cout << "16. Buy Stock\n";
         }
 
         std::cout << "Enter your choice: ";
@@ -79,7 +80,10 @@ int main() {
                 break;
             case 15:
                 withdrawCash(currentUsername);
-                break;            
+                break;
+            case 16:
+                buyStock(currentUsername);
+                break;
             default:
                 std::cout << "Invalid choice. Try again.\n";
         }
