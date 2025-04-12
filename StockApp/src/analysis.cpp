@@ -3,6 +3,8 @@
 #include <string>
 #include <map>
 #include <iomanip>
+#include <regex>
+#include <sstream>
 #include "json.hpp"
 #include "global.h"
 
@@ -50,11 +52,22 @@ void findStatistic(const std::string& statName) {
             valid = true;
         } else if (choice == "2") {
             std::string owner;
-            std::cout << "Enter the owner of the stock list: ";
-            std::cin >> owner;
-            std::cout << "Enter the name of the stock list: ";
-            std::cin.ignore();
-            std::getline(std::cin, name);
+            std::string start, end;
+            std::regex dateRegex(R"(\d{4}-\d{2}-\d{2})");
+
+            std::cout << "Enter start date (YYYY-MM-DD): ";
+            std::cin >> start;
+            if (!std::regex_match(start, dateRegex)) {
+                std::cout << "Invalid start date format.\n";
+                return;
+            }
+
+            std::cout << "Enter end date (YYYY-MM-DD): ";
+            std::cin >> end;
+            if (!std::regex_match(end, dateRegex)) {
+                std::cout << "Invalid end date format.\n";
+                return;
+            }
 
             pqxx::result res = W.exec(
                 "SELECT 1 FROM StockList WHERE name = " + W.quote(name) +
@@ -110,6 +123,7 @@ void findStatistic(const std::string& statName) {
                 if (result.empty()) {
                     std::cout << "Statistic not cached yet for stock " << symbol << ".\n";
                 } else {
+                    std::cout << "Interval: All (Default)\n";
                     std::cout << statName << " for " << symbol << " is: " << result[0][0].as<std::string>() << "\n";
                 }
 
@@ -151,7 +165,11 @@ void findStatistic(const std::string& statName) {
                 if (calc.empty() || calc[0][0].is_null()) {
                     std::cout << "Unable to compute " << statName << " in the given interval.\n";
                 } else {
-                    std::cout << "Calculated " << statName << " for " << symbol << ": " << calc[0][0].as<std::string>() << "\n";
+                    double value = calc[0][0].as<double>();
+                    std::stringstream ss;
+                    ss << std::fixed << std::setprecision(4) << value;
+                    std::cout << "Interval: " << start << " to " << end << "\n";
+                    std::cout << "Calculated " << statName << " for " << symbol << ": " << ss.str() << "\n";
                 }
 
             } else {
