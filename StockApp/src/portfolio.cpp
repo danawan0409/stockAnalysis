@@ -94,7 +94,7 @@ void depositCash(const std::string& ownerUsername) {
     std::cout << "Select a portfolio to deposit into (enter number): ";
     std::cin >> choice;
 
-    if (choice < 1 || choice > portfolios.size()) {
+    if (choice < 1 || choice > static_cast<int>(portfolios.size())) {
         std::cout << "Invalid selection.\n";
         return;
     }
@@ -134,7 +134,7 @@ void depositCash(const std::string& ownerUsername) {
             int fromIndex;
             std::cin >> fromIndex;
 
-            if (fromIndex < 1 || fromIndex > portfolios.size() || fromIndex == choice) {
+            if (fromIndex < 1 || fromIndex > static_cast<int>(portfolios.size() || fromIndex == choice) {
                 std::cout << "Invalid transfer source.\n";
                 return;
             }
@@ -190,7 +190,7 @@ void withdrawCash(const std::string& ownerUsername) {
     std::cout << "Select a portfolio to withdraw from: ";
     std::cin >> choice;
 
-    if (choice < 1 || choice > portfolios.size()) {
+    if (choice < 1 || choice > static_cast<int>(portfolios.size())) {
         std::cout << "Invalid selection.\n";
         return;
     }
