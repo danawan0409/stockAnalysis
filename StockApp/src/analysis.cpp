@@ -126,9 +126,10 @@ void findStatistic(const std::string& statName) {
                 pqxx::result result = W.exec(
                     "SELECT " + statName + " FROM CachedStockStatistics WHERE symbol = " + W.quote(symbol) + ";"
                 );
+                std::cout << "SELECT " + statName + " FROM CachedStockStatistics WHERE symbol = " + W.quote(symbol) + ";"
 
                 if (result.empty()) {
-                    std::cout << "Statistic not cached yet for stock " << symbol << ".\n";
+                    std::cout << "Statistic not cached yet for stock" << symbol << ".\n";
                 } else {
                     std::cout << "Interval: All (Default)\n";
                     std::cout << statName << " for " << symbol << " is: " << result[0][0].as<std::string>() << "\n";
@@ -284,7 +285,7 @@ void findMatrix(const std::string& matrixType) {
             std::cout << "Invalid option. Please enter 1 or 2.\n";
             return;
         }
-        
+
         if (useDefault == 2) {
             std::regex dateRegex(R"(\d{4}-\d{2}-\d{2})");
 
