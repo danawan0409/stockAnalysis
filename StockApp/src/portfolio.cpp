@@ -15,10 +15,9 @@ void createPortfolio(const std::string& ownerUsername) {
     std::getline(std::cin, name);
 
     std::cout << "Enter initial cash amount: ";
-    std::cin >> initialCash;
 
-    if (initialCash < 0) {
-        std::cout << "Initial cash cannot be negative.\n";
+    if (!getValidatedInput(initialCash) || initialCash < 0) {
+        std::cout << "Invalid amount.\n";
         return;
     }
 
@@ -69,7 +68,10 @@ void viewPortfolios(const std::string& ownerUsername) {
 
         int choice;
         std::cout << "Enter portfolio number to view market value (0 to cancel): ";
-        std::cin >> choice;
+        if (!getValidatedInput(choice)) {
+            std::cout << "Invalid choice.\n";
+            return;
+        }
 
         if (choice == 0) {
             std::cout << "Cancelled.\n";
