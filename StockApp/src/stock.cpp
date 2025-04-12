@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <cmath>
 #include <algorithm>
+#include <random>
 
 void drawASCII(const std::vector<std::pair<std::string, double>>& data) {
     if (data.empty()) return;
@@ -76,10 +77,16 @@ std::vector<std::pair<std::string, double>> predictFuturePrices(
     std::istringstream ss("2018-02-08");
     ss >> std::get_time(&start, "%Y-%m-%d");
 
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dist(-0.005, 0.005);  // ±0.5%
+
     for (int i = 0; i < predictDays; ++i) {
         double sum = 0;
         for (int j = 0; j < windowSize; ++j) sum += recentPrices[recentPrices.size() - windowSize + j];
         double predicted = sum / windowSize;
+        double noise = predicted * dist(gen);
+        predicted += noise;
         recentPrices.push_back(predicted);
 
         char buf[11];
