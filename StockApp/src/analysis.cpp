@@ -39,6 +39,8 @@ void findStatistic(const std::string& statName) {
         pqxx::connection C(connect_info);
         pqxx::work W(C);
 
+        std::string owner, name, symbol;
+        
         if (choice == "1") {
             std::cout << "Enter the name of the portfolio: ";
             std::cin.ignore();
@@ -68,7 +70,6 @@ void findStatistic(const std::string& statName) {
 
             valid = true;
         } else if (choice == "2") {
-            std::string owner, name, symbol;
             valid = false;
 
             std::cout << "Enter the owner of the stock list: ";
