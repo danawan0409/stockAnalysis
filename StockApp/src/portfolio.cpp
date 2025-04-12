@@ -16,10 +16,7 @@ void createPortfolio(const std::string& ownerUsername) {
 
     std::cout << "Enter initial cash amount: ";
 
-    if (!getValidatedInput(initialCash) || initialCash < 0) {
-        std::cout << "Invalid amount.\n";
-        return;
-    }
+    if (!getValidatedInput(initialCash)) return;
 
     try {
         pqxx::connection C(connect_info);
@@ -68,10 +65,7 @@ void viewPortfolios(const std::string& ownerUsername) {
 
         int choice;
         std::cout << "Enter portfolio number to view market value (0 to cancel): ";
-        if (!getValidatedInput(choice)) {
-            std::cout << "Invalid choice.\n";
-            return;
-        }
+        if (!getValidatedInput(choice)) return;
 
         if (choice == 0) {
             std::cout << "Cancelled.\n";
@@ -156,7 +150,7 @@ void deletePortfolio(const std::string& ownerUsername) {
 
         std::cout << "Enter number of portfolio to delete: ";
         int choice;
-        std::cin >> choice;
+        if (!getValidatedInput(choice)) return;
         if (choice < 1 || choice > static_cast<int>(portfolios.size())) {
             std::cout << "Invalid selection.\n";
             return;
@@ -234,7 +228,7 @@ void depositCash(const std::string& ownerUsername) {
 
     int choice;
     std::cout << "Select a portfolio to deposit into (enter number): ";
-    std::cin >> choice;
+    if (!getValidatedInput(choice)) return;
 
     if (choice < 1 || choice > static_cast<int>(portfolios.size())) {
         std::cout << "Invalid selection.\n";
@@ -245,12 +239,12 @@ void depositCash(const std::string& ownerUsername) {
 
     int sourceType;
     std::cout << "Deposit from:\n1. External bank account\n2. Another portfolio cash account\nEnter choice: ";
-    std::cin >> sourceType;
+    if (!getValidatedInput(sourceType)) return;
 
     if (sourceType == 1) {
         double amount;
         std::cout << "Enter amount to deposit (0 to cancel): ";
-        std::cin >> amount;
+        if (!getValidatedInput(amount)) return;
         if (amount == 0) {
             std::cout << "Deposit cancelled.\n";
             return;
@@ -278,7 +272,7 @@ void depositCash(const std::string& ownerUsername) {
     } else if (sourceType == 2) {
         std::cout << "Select source portfolio number (note: from portfolio above): ";
         int fromIndex;
-        std::cin >> fromIndex;
+        if (!getValidatedInput(fromIndex)) return;
 
         if (fromIndex < 1 || fromIndex > static_cast<int>(portfolios.size()) || fromIndex == choice) {
             std::cout << "Invalid transfer source.\n";
@@ -289,7 +283,7 @@ void depositCash(const std::string& ownerUsername) {
 
         double amount;
         std::cout << "Enter amount to deposit (enter 0 to cancel): ";
-        std::cin >> amount;
+        if (!getValidatedInput(amount)) return;
 
         if (amount == 0) {
             std::cout << "Transfer cancelled.\n";
@@ -348,7 +342,7 @@ void withdrawCash(const std::string& ownerUsername) {
 
     int choice;
     std::cout << "Select a portfolio to withdraw from: ";
-    std::cin >> choice;
+    if (!getValidatedInput(choice)) return;
 
     if (choice < 1 || choice > static_cast<int>(portfolios.size())) {
         std::cout << "Invalid selection.\n";
@@ -360,7 +354,7 @@ void withdrawCash(const std::string& ownerUsername) {
 
     double amount;
     std::cout << "Enter amount to withdraw (0 to cancel): ";
-    std::cin >> amount;
+    if (!getValidatedInput(amount)) return;
 
     if (amount == 0) {
         std::cout << "Withdraw cancelled.\n";
@@ -394,7 +388,7 @@ void buyStock(const std::string& ownerUsername) {
 
     int choice;
     std::cout << "Select portfolio by number: ";
-    std::cin >> choice;
+    if (!getValidatedInput(choice)) return;
 
     if (choice < 1 || choice > static_cast<int>(portfolios.size())) {
         std::cout << "Invalid portfolio choice.\n";
@@ -406,7 +400,7 @@ void buyStock(const std::string& ownerUsername) {
 
     std::string stockSymbol;
     std::cout << "Enter stock symbol: ";
-    std::cin >> stockSymbol;
+    if (!getValidatedInput(stockSymbol)) return;
 
     try {
         pqxx::connection C(connect_info);
@@ -426,7 +420,7 @@ void buyStock(const std::string& ownerUsername) {
 
         int quantity;
         std::cout << "Enter quantity to buy (0 to cancel): ";
-        std::cin >> quantity;
+        if (!getValidatedInput(quantity)) return;
         if (quantity == 0) {
             std::cout << "Buy operation canceled.\n";
             return;
@@ -473,7 +467,7 @@ void sellStock(const std::string& ownerUsername) {
 
     int choice;
     std::cout << "Select portfolio by number: ";
-    std::cin >> choice;
+    if (!getValidatedInput(choice)) return;
 
     if (choice < 1 || choice > static_cast<int>(portfolios.size())) {
         std::cout << "Invalid portfolio choice.\n";
@@ -522,7 +516,7 @@ void sellStock(const std::string& ownerUsername) {
 
         std::string stockSymbol;
         std::cout << "\nEnter stock symbol to sell: ";
-        std::cin >> stockSymbol;
+        if (!getValidatedInput(stockSymbol)) return;
 
         std::string getPrice =
             "SELECT close FROM Stock WHERE symbol = " + W.quote(stockSymbol) + ";";
@@ -550,7 +544,7 @@ void sellStock(const std::string& ownerUsername) {
 
         int quantity;
         std::cout << "Enter quantity to sell (0 to cancel): ";
-        std::cin >> quantity;
+        if (!getValidatedInput(quantity)) return;
         if (quantity == 0) {
             std::cout << "Sell operation canceled.\n";
             return;
@@ -610,7 +604,7 @@ void viewPortfolioHistorical(const std::string& ownerUsername) {
         }
 
         int pchoice;
-        std::cin >> pchoice;
+        if (!getValidatedInput(pchoice)) return;
         if (pchoice < 1 || pchoice > static_cast<int>(portfolios.size())) {
             std::cout << "Invalid selection.\n";
             return;
@@ -634,7 +628,7 @@ void viewPortfolioHistorical(const std::string& ownerUsername) {
         }
 
         int schoice;
-        std::cin >> schoice;
+        if (!getValidatedInput(schoice)) return;
         if (schoice < 1 || schoice > static_cast<int>(holdings.size())) {
             std::cout << "Invalid selection.\n";
             return;
@@ -650,7 +644,7 @@ void viewPortfolioHistorical(const std::string& ownerUsername) {
         std::cout << "5. Past 5 years\n";
 
         int rangeChoice;
-        std::cin >> rangeChoice;
+        if (!getValidatedInput(rangeChoice)) return;
 
         std::string interval;
         switch (rangeChoice) {
@@ -693,7 +687,7 @@ void viewPortfolioHistorical(const std::string& ownerUsername) {
         // Ask user if they want to display the table
         std::string showTable;
         std::cout << "Would you like to display the raw data table? (yes/no): ";
-        std::cin >> showTable;
+        if (!getValidatedInput(showTable)) return;
 
         if (showTable == "yes" || showTable == "y" || showTable == "Y") {
             std::cout << "\nDate        | Close Price\n";
@@ -709,7 +703,7 @@ void viewPortfolioHistorical(const std::string& ownerUsername) {
                 if (count % 20 == 0 && i + 1 < date_price.size()) {
                     std::string cont;
                     std::cout << "\nShow more? (yes/no): ";
-                    std::cin >> cont;
+                    if (!getValidatedInput(cont)) return;
                     if (cont != "yes" && cont != "y" && cont != "Y") {
                         break;
                     }
@@ -743,7 +737,7 @@ void viewPortfolioPrediction(const std::string& ownerUsername) {
         }
 
         int pchoice;
-        std::cin >> pchoice;
+        if (!getValidatedInput(pchoice)) return;
         if (pchoice < 1 || pchoice > static_cast<int>(portfolios.size())) {
             std::cout << "Invalid selection.\n";
             return;
@@ -767,7 +761,7 @@ void viewPortfolioPrediction(const std::string& ownerUsername) {
         }
 
         int schoice;
-        std::cin >> schoice;
+        if (!getValidatedInput(schoice)) return;
         if (schoice < 1 || schoice > static_cast<int>(holdings.size())) {
             std::cout << "Invalid stock choice.\n";
             return;
@@ -797,7 +791,7 @@ void viewPortfolioPrediction(const std::string& ownerUsername) {
         // predict future prices
         std::cout << "Enter number of days to predict into the future (range: 1-365 days): ";
         int days;
-        std::cin >> days;
+        if (!getValidatedInput(days)) return;
         if (days <= 0 || days > 365) {
             std::cout << "Please enter a number between 1 and 365.\n";
             return;
