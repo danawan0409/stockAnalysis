@@ -170,7 +170,7 @@ void findMatrix(const std::string& matrixType) {
     std::cin >> type;
 
     try {
-        pqxx::connection C("dbname=yourdbname user=youruser password=yourpass host=yourhost");
+        pqxx::connection C(connect_info);
         pqxx::work W(C);
 
         std::vector<std::string> symbols;
