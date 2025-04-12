@@ -1,8 +1,6 @@
 #ifndef FRIEND_H 
 #define FRIEND_H
 
-#include <string>
-
 void sendFriendRequest(const std::string& senderUsername);
 
 void viewIncomingFriendRequests(const std::string& username);
