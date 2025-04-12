@@ -102,13 +102,8 @@ CREATE TABLE PortfolioHasStock (
     portfolioName VARCHAR(50) NOT NULL,
     ownerUsername VARCHAR(50) NOT NULL,
     stockID VARCHAR(10),
-    purchaseDate DATE,
-    purchasePrice NUMERIC(10, 2),
-    quantity INTEGER,
-    sold BOOLEAN DEFAULT FALSE,
-    sellDate DATE,
-    sellPrice NUMERIC(10, 2),
-    PRIMARY KEY (portfolioName, ownerUsername, stockID, purchaseDate),
+    quantity INTEGER NOT NULL,
+    PRIMARY KEY (portfolioName, ownerUsername, stockID),
     FOREIGN KEY (portfolioName, ownerUsername) REFERENCES Portfolio(name, ownerUsername) ON DELETE CASCADE,
     FOREIGN KEY (stockID) REFERENCES Stock(symbol) ON DELETE CASCADE
 );
