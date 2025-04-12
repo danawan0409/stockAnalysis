@@ -13,10 +13,27 @@ void createPortfolio(const std::string& ownerUsername) {
     std::cout << "Enter initial cash amount: ";
     std::cin >> initialCash;
 
+    if (initialCash < 0) {
+        std::cout << "Initial cash cannot be negative.\n";
+        return;
+    }
+
     try {
         pqxx::connection C("dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432");
         pqxx::work W(C);
 
+        // check if portfolio name already exists for the user
+        std::string checkQuery =
+            "SELECT 1 FROM Portfolio WHERE name = " + W.quote(name) +
+            " AND ownerUsername = " + W.quote(ownerUsername) + ";";
+
+        pqxx::result R = W.exec(checkQuery);
+        if (!R.empty()) {
+            std::cout << "You already have a portfolio named \"" << name << "\". Please pick another one.\n";
+            return;
+        }
+
+        // insert new portfolio
         std::string query =
             "INSERT INTO Portfolio (name, cashAccount, ownerUsername) VALUES (" +
             W.quote(name) + ", " + W.quote(initialCash) + ", " + W.quote(ownerUsername) + ");";
