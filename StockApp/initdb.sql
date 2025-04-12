@@ -141,7 +141,7 @@ FOR EACH ROW
 EXECUTE FUNCTION check_friendship();
 
 -- Insert initial data into the Stock table
-INSERT INTO Stock(symbol)
+INSERT INTO Stock(symbol, close)
 SELECT symbol, close
 FROM StockHistory
 WHERE timestamp = '2018-02-17'
