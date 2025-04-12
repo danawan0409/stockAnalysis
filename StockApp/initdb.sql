@@ -60,8 +60,6 @@ CREATE TABLE Review (
     ownerUsername VARCHAR(50), 
     stockListName VARCHAR(100) NOT NULL,
     content TEXT CHECK (char_length(content) <= 4000),
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (writerUsername, ownerUsername, stockListName),
     FOREIGN KEY (writerUsername) REFERENCES "User"(username) ON DELETE CASCADE,
     FOREIGN KEY (stockListName, ownerUsername) REFERENCES StockList(name, ownerUsername) ON DELETE CASCADE
