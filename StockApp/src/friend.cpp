@@ -26,7 +26,8 @@ void sendFriendRequest(const std::string& senderUsername) {
             return;
         }
 
-        query = 
+        // Check if a previous request was rejected or deleted recently
+        query =
             "SELECT EXTRACT(EPOCH FROM CURRENT_TIMESTAMP - updatedTime) AS seconds "
             "FROM Friends "
             "WHERE ((senderUsername = " + W.quote(senderUsername) + " AND receiverUsername = " + W.quote(receiverUsername) + ") "
@@ -34,24 +35,29 @@ void sendFriendRequest(const std::string& senderUsername) {
             "AND state IN ('rejected', 'deleted');";
         pqxx::result timeCheck = W.exec(query);
 
-        if (!timeCheck.empty() && timeCheck[0]["seconds"].as<double>() > 300) {
-            query = 
-                "UPDATE Friends "
-                "SET state = 'pending', senderUsername = " + W.quote(senderUsername) +
-                ", receiverUsername = " + W.quote(receiverUsername) +
-                ", requestTime = CURRENT_TIMESTAMP, updatedTime = CURRENT_TIMESTAMP "
-                "WHERE ((senderUsername = " + W.quote(senderUsername) + " AND receiverUsername = " + W.quote(receiverUsername) + ") "
-                "   OR (senderUsername = " + W.quote(receiverUsername) + " AND receiverUsername = " + W.quote(senderUsername) + ")) "
-                "AND state IN ('rejected', 'deleted');";
-            W.exec(query);
-            W.commit();
-            std::cout << "Friend request re-sent to '" << receiverUsername << "'.\n";
-            return;
-        } else if (timeCheck[0]["seconds"].as<double>() < 300){
-            std::cout << "Please wait 5 minutes after a friend request has been rejected or a friend has been deleted to request again.\n";
-            return;
+        if (!timeCheck.empty()) {
+            double secondsSinceLast = timeCheck[0]["seconds"].as<double>();
+            if (secondsSinceLast < 300) {
+                std::cout << "Please wait 5 minutes after a friend request has been rejected or a friend has been deleted to request again.\n";
+                return;
+            } else {
+                // Resend request
+                query =
+                    "UPDATE Friends "
+                    "SET state = 'pending', senderUsername = " + W.quote(senderUsername) +
+                    ", receiverUsername = " + W.quote(receiverUsername) +
+                    ", requestTime = CURRENT_TIMESTAMP, updatedTime = CURRENT_TIMESTAMP "
+                    "WHERE ((senderUsername = " + W.quote(senderUsername) + " AND receiverUsername = " + W.quote(receiverUsername) + ") "
+                    "   OR (senderUsername = " + W.quote(receiverUsername) + " AND receiverUsername = " + W.quote(senderUsername) + ")) "
+                    "AND state IN ('rejected', 'deleted');";
+                W.exec(query);
+                W.commit();
+                std::cout << "Friend request re-sent to '" << receiverUsername << "'.\n";
+                return;
+            }
         }
 
+        // Check if any friend request or friendship already exists
         query =
             "SELECT 1 FROM Friends "
             "WHERE (senderUsername = " + W.quote(senderUsername) + " AND receiverUsername = " + W.quote(receiverUsername) + ") "
@@ -63,6 +69,7 @@ void sendFriendRequest(const std::string& senderUsername) {
             return;
         }
 
+        // Send new request
         query =
             "INSERT INTO Friends (senderUsername, receiverUsername, state, requestTime, updatedTime) "
             "VALUES (" + W.quote(senderUsername) + ", " + W.quote(receiverUsername) + ", 'pending', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);";
@@ -74,6 +81,7 @@ void sendFriendRequest(const std::string& senderUsername) {
         std::cerr << "Error: " << e.what() << "\n";
     }
 }
+
 
 void viewIncomingFriendRequests(const std::string& username) {
     try {
