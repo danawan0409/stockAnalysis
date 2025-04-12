@@ -186,7 +186,8 @@ void stockListMenu(){
         std::cout << "7. Add a Review for a Stock List\n";
         std::cout << "8. Edit a Review for a Stock List\n";
         std::cout << "9. Delete a Review for a Stock List\n";
-        std::cout << "10. Go Back to Main Menu\n";
+        std::cout << "10. View all Stocks in a Stock Listt\n";
+        std::cout << "11. Go Back to Main Menu\n";
         std::cout << "Enter your choice: ";
         std::cin >> choice;
 
@@ -218,7 +219,10 @@ void stockListMenu(){
             case 9:
                 deleteReviewStockList(currentUsername); 
                 break;
-            case 10:
+            case 10: 
+                viewStockListsStock(currentUsername); 
+                break; 
+            case 11:
                 return;        
             default:
                 std::cout << "Invalid choice. Try again.\n";

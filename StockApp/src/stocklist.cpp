@@ -147,7 +147,17 @@ void viewStockLists(const std::string& ownerUsername) {
                 int offset = page * 20;
 
                 std::string query =
-                    "SELECT DISTINCT S.name, S.ownerUsername, S.visibility "
+                    "SELECT DISTINCT S.name, S.ownerUsername, "
+                    "CASE "
+                    "  WHEN S.visibility = 'public' THEN 'public' "
+                    "  WHEN S.ownerUsername = " + W.quote(ownerUsername) + " THEN 'private' "
+                    "  WHEN EXISTS ("
+                    "    SELECT 1 FROM ShareStockList SS "
+                    "    WHERE SS.stockListName = S.name AND SS.ownerUsername = S.ownerUsername "
+                    "      AND SS.receiverUsername = " + W.quote(ownerUsername) +
+                    ") THEN 'shared' "
+                    "  ELSE 'private' "
+                    "END AS visibility "
                     "FROM StockList S "
                     "LEFT JOIN ShareStockList SS ON S.name = SS.stockListName AND S.ownerUsername = SS.ownerUsername "
                     "WHERE "
@@ -155,7 +165,6 @@ void viewStockLists(const std::string& ownerUsername) {
                     "OR (SS.receiverUsername = " + W.quote(ownerUsername) + ") "
                     "OR (S.visibility = 'public') "
                     "ORDER BY S.ownerUsername, S.name "
-                    "LIMIT 20 OFFSET " + W.quote(offset) + ";";
 
                 pqxx::result res = W.exec(query);
 
