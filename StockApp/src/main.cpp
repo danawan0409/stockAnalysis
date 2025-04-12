@@ -149,7 +149,7 @@ void portfolioMenu() {
                 pauseConsole();
                 break;      
             case 9:
-                viewPortfolioPerformance(currentUsername);
+                viewPortfolioPastPerformance(currentUsername);
                 pauseConsole();
                 break;
             case 10:
