@@ -420,3 +420,126 @@ void buyStock(const std::string& ownerUsername) {
         std::cerr << "Error during stock purchase: " << e.what() << "\n";
     }
 }
+
+void sellStock(const std::string& ownerUsername) {
+    auto portfolios = listUserPortfolios(ownerUsername);
+
+    int choice;
+    std::cout << "Select portfolio by number: ";
+    std::cin >> choice;
+
+    if (choice < 1 || choice > static_cast<int>(portfolios.size())) {
+        std::cout << "Invalid portfolio choice.\n";
+        return;
+    }
+
+    std::string portfolioName = portfolios[choice - 1].first;
+
+    try {
+        pqxx::connection C("dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432");
+        pqxx::work W(C);
+
+        std::string holdingQuery =
+            "SELECT phs.stockID, phs.quantity, s.close "
+            "FROM PortfolioHasStock phs "
+            "JOIN Stock s ON phs.stockID = s.symbol "
+            "WHERE phs.portfolioName = " + W.quote(portfolioName) +
+            " AND phs.ownerUsername = " + W.quote(ownerUsername) + ";";
+
+        pqxx::result holdings = W.exec(holdingQuery);
+
+        std::cout << "\nHoldings in \"" << portfolioName << "\":\n";
+        if (holdings.empty()) {
+            std::cout << "(no stocks held in this portfolio)\n";
+            return;
+        } else {
+            std::cout << std::left << std::setw(10) << "Symbol"
+                      << std::setw(10) << "Quantity"
+                      << std::setw(12) << "Price"
+                      << std::setw(12) << "Value" << "\n";
+            std::cout << "--------------------------------------------------\n";
+
+            for (const auto& row : holdings) {
+                std::string symbol = row["stockid"].as<std::string>();
+                int qty = row["quantity"].as<int>();
+                double price = row["close"].as<double>();
+                double value = qty * price;
+
+                std::cout << std::left << std::setw(10) << symbol
+                          << std::setw(10) << qty
+                          << "$" << std::setw(11) << std::fixed << std::setprecision(2) << price
+                          << "$" << std::setw(11) << std::fixed << std::setprecision(2) << value
+                          << "\n";
+            }
+        }
+
+        std::string stockSymbol;
+        std::cout << "\nEnter stock symbol to sell: ";
+        std::cin >> stockSymbol;
+
+        std::string getPrice =
+            "SELECT close FROM Stock WHERE symbol = " + W.quote(stockSymbol) + ";";
+        pqxx::result priceResult = W.exec(getPrice);
+        if (priceResult.empty()) {
+            std::cout << "Stock symbol not found.\n";
+            return;
+        }
+        double price = priceResult[0]["close"].as<double>();
+        std::cout << "Current price of " << stockSymbol << ": $" << price << "\n";
+
+        std::string getHolding =
+            "SELECT quantity FROM PortfolioHasStock "
+            "WHERE portfolioName = " + W.quote(portfolioName) +
+            " AND ownerUsername = " + W.quote(ownerUsername) +
+            " AND stockID = " + W.quote(stockSymbol) + ";";
+        pqxx::result holding = W.exec(getHolding);
+        if (holding.empty()) {
+            std::cout << "You do not own any shares of " << stockSymbol << " in this portfolio.\n";
+            return;
+        }
+
+        int owned = holding[0]["quantity"].as<int>();
+        std::cout << "You currently own " << owned << " shares.\n";
+
+        int quantity;
+        std::cout << "Enter quantity to sell: ";
+        std::cin >> quantity;
+        if (quantity <= 0 || quantity > owned) {
+            std::cout << "Invalid quantity. You only have " << owned << " shares.\n";
+            return;
+        }
+
+        double totalGain = price * quantity;
+
+        std::string updateCash =
+            "UPDATE Portfolio SET cashAccount = cashAccount + " + std::to_string(totalGain) +
+            " WHERE name = " + W.quote(portfolioName) +
+            " AND ownerUsername = " + W.quote(ownerUsername) + ";";
+
+        std::string updateHolding;
+        if (quantity == owned) {
+            updateHolding =
+                "DELETE FROM PortfolioHasStock "
+                "WHERE portfolioName = " + W.quote(portfolioName) +
+                " AND ownerUsername = " + W.quote(ownerUsername) +
+                " AND stockID = " + W.quote(stockSymbol) + ";";
+        } else {
+            updateHolding =
+                "UPDATE PortfolioHasStock SET quantity = quantity - " + std::to_string(quantity) +
+                " WHERE portfolioName = " + W.quote(portfolioName) +
+                " AND ownerUsername = " + W.quote(ownerUsername) +
+                " AND stockID = " + W.quote(stockSymbol) + ";";
+        }
+
+        W.exec(updateCash);
+        W.exec(updateHolding);
+        W.commit();
+
+        std::cout << "Sold " << quantity << " shares of " << stockSymbol
+                  << " at $" << std::fixed << std::setprecision(2) << price
+                  << " each, total gain $" << totalGain << "\n";
+
+    } catch (const std::exception& e) {
+        std::cerr << "Error during stock sale: " << e.what() << "\n";
+    }
+}
