@@ -68,8 +68,13 @@ void viewPortfolios(const std::string& ownerUsername) {
         }
 
         int choice;
-        std::cout << "Enter portfolio number to view market value: ";
+        std::cout << "Enter portfolio number to view market value (0 to cancel): ";
         std::cin >> choice;
+
+        if (choice == 0) {
+            std::cout << "Cancelled.\n";
+            return;
+        }
 
         if (choice < 1 || choice > static_cast<int>(portfolios.size())) {
             std::cout << "Invalid selection.\n";
