@@ -2,6 +2,8 @@
 #include <pqxx/pqxx>
 #include "stocklist.h"
 #include <termios.h>
+#include <unistd.h>
+#include <stdio.h>
 
 std::string connect_info = "dbname=c43final user=postgres password=123 hostaddr=127.0.0.1 port=5432";
 
