@@ -35,7 +35,11 @@ int main() {
         }
 
         std::cout << "Enter your choice: ";
-        if (!getValidatedInput(choice)) return;
+        if (!getValidatedInput(choice)) {
+            std::cout << "Returning to menu...\n";
+            pauseConsole();
+            continue;
+        }
 
         if (currentUsername.empty()) {
             switch (choice) {
