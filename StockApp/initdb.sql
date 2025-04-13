@@ -226,6 +226,7 @@ paired_returns AS (
         b.daily_return AS ret2
     FROM valid_returns a
     JOIN valid_returns b ON a.timestamp = b.timestamp
+    WHERE a.symbol < b.symbol 
 )
 SELECT 
     symbol1,
