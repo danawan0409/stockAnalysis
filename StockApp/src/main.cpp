@@ -341,7 +341,7 @@ void analysisMenu(){
         std::cout << "=============================\n";
         std::cout << "1. View Correlation Matrix\n";
         std::cout << "2. View Covariance Matrix\n";
-        std::cout << "3. View Variation for a Stock\n";
+        std::cout << "3. View Coefficient of Variation for a Stock\n";
         std::cout << "4. View Beta for a Stock\n";
         std::cout << "5. Go Back to Main Menu\n";
         std::cout << "Enter your choice: ";

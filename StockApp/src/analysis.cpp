@@ -170,9 +170,15 @@ void findStatistic(const std::string& statName) {
                         FROM prices
                     )
                 )" + (statName == "variation" ?
-                    R"(SELECT VAR_POP(ret) AS result
-                    FROM stock_returns
-                    WHERE symbol = )" + W.quote(symbol) + ";" :
+                    // Coefficient of Variation: stddev / mean
+                    R"(SELECT
+                        CASE
+                            WHEN AVG(ret) = 0 THEN NULL
+                            ELSE STDDEV_POP(ret) / NULLIF(AVG(ret), 0)
+                        END AS result
+                      FROM stock_returns
+                      WHERE symbol = )" + W.quote(symbol) + ";" :
+                    // Beta logic remains the same
                     R"(, market_returns AS (
                         SELECT
                             timestamp,
@@ -184,7 +190,6 @@ void findStatistic(const std::string& statName) {
                     FROM stock_returns s
                     JOIN market_returns m ON s.timestamp = m.timestamp
                     WHERE s.symbol = )" + W.quote(symbol) + ";");
-
 
                 pqxx::result calc = W.exec(query);
 
