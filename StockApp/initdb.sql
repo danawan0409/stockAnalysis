@@ -140,7 +140,7 @@ WITH stock_returns AS (
         symbol,
         timestamp,
         (close - LAG(close) OVER (PARTITION BY symbol ORDER BY timestamp)) / 
-        LAG(close) OVER (PARTITION BY symbol ORDER BY timestamp) AS daily_return
+        NULLIF(LAG(close) OVER (PARTITION BY symbol ORDER BY timestamp), 0) AS daily_return
     FROM StockHistory
 ),
 market_returns AS (
@@ -162,7 +162,8 @@ filtered AS (
 stats AS (
     SELECT 
         symbol,
-        VAR_POP(stock_return) AS stock_variance,
+        STDDEV_POP(stock_return) AS std_dev,
+        AVG(stock_return) AS mean_return,
         COVAR_POP(stock_return, market_return) AS covariance,
         VAR_POP(market_return) AS market_variance
     FROM filtered
@@ -172,7 +173,7 @@ INSERT INTO CachedStockStatistics (symbol, beta, variation, last_updated)
 SELECT 
     symbol,
     (covariance / NULLIF(market_variance, 0)) AS beta,
-    stock_variance AS variation,
+    (std_dev / NULLIF(mean_return, 0)) AS variation,  -- This is now coefficient of variation
     CURRENT_TIMESTAMP
 FROM stats
 ON CONFLICT (symbol)

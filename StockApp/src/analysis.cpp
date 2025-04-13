@@ -128,8 +128,6 @@ void findStatistic(const std::string& statName) {
                     "SELECT " + statName + " FROM CachedStockStatistics WHERE symbol = " + W.quote(symbol) + ";"
                 );
 
-                std::cout << "SELECT " + statName + " FROM CachedStockStatistics WHERE symbol = " + W.quote(symbol) + ";"; 
-
                 if (result.empty()) {
                     std::cout << "Statistic not cached yet for stock" << symbol << ".\n";
                 } else {
